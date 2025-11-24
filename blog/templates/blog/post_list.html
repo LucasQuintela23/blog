@@ -12,7 +12,7 @@
                     <div class="card-body py-2 px-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5 class="text-uppercase text-muted mb-0"
-                                style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;">CATEGORIES</h5>
+                                style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;">CATEGORIAS</h5>
                             {% if current_category %}
                             <a href="{% url 'blog:post_list' %}" class="btn btn-sm btn-outline-secondary"
                                 style="font-size: 0.6rem; padding: 0.15rem 0.4rem;">Limpar filtro</a>
@@ -181,7 +181,7 @@
                 </article>
                 {% empty %}
                 <div class="text-center py-5">
-                    <p class="text-muted">No posts found yet.</p>
+                    <p class="text-muted">Nenhum post encontrado ainda.</p>
                 </div>
                 {% endfor %}
 
@@ -191,18 +191,18 @@
                     <ul class="pagination justify-content-center">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
                         </li>
                         {% endif %}
 
                         <li class="page-item disabled">
-                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages
+                            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages
                                 }}</span>
                         </li>
 
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
                         </li>
                         {% endif %}
                     </ul>

@@ -20,7 +20,7 @@
 
     <!-- Comments Section -->
     <section class="mt-5">
-        <h3>Comments</h3>
+        <h3>Comentários</h3>
         {% for comment in post.comments.all %}
         <div class="mb-3">
             <strong>{{ comment.author }}</strong>
@@ -28,20 +28,20 @@
             <p>{{ comment.body }}</p>
         </div>
         {% empty %}
-        <p class="text-muted">No comments yet.</p>
+        <p class="text-muted">Ainda não há comentários.</p>
         {% endfor %}
 
         <form method="post" class="mt-4">
             {% csrf_token %}
             <div class="mb-3">
-                <label for="author" class="form-label">Name</label>
+                <label for="author" class="form-label">Nome</label>
                 <input type="text" class="form-control" id="author" name="author" required>
             </div>
             <div class="mb-3">
-                <label for="body" class="form-label">Comment</label>
+                <label for="body" class="form-label">Comentário</label>
                 <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Enviar</button>
         </form>
     </section>
 
@@ -49,7 +49,7 @@
 
     <div class="d-flex justify-content-between align-items-center">
         <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary">
-            &larr; Back to Home
+            &larr; Voltar para o Início
         </a>
     </div>
 </article>

@@ -20,8 +20,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=1763953410">
-    <link rel="stylesheet" href="{% static 'css/navbar.css' %}?v=1763953410">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=1764010924">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}?v=1764010924">
 
     <!-- Inline CSS for copy button (to bypass cache) -->
     <style>
@@ -65,7 +65,7 @@
 <body>
     <nav class="navbar navbar-expand-lg sticky-top custom-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'blog:post_list' %}">TechBlog</a>
+            <a class="navbar-brand" href="{% url 'blog:post_list' %}">Blog</a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -74,11 +74,11 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'blog:about' %}">{% trans "About" %}</a>
+                        <a class="nav-link" href="{% url 'blog:about' %}">{% trans "Sobre" %}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link contact-btn" href="#">
-                            {% trans "Contact" %}
+                            {% trans "Contato" %}
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor"
                                 class="bi bi-box-arrow-up-right ms-1" viewBox="0 0 16 16" style="opacity: 0.5;">
                                 <path fill-rule="evenodd"
@@ -90,7 +90,7 @@
                     </li>
                     <li class="nav-item ms-lg-3">
                         <form action="{% url 'blog:post_list' %}" method="get" class="search-wrapper">
-                            <input type="text" name="q" class="form-control search-input" placeholder="Search..."
+                            <input type="text" name="q" class="form-control search-input" placeholder="Buscar..."
                                 value="{{ request.GET.q }}">
                         </form>
                     </li>
@@ -112,7 +112,7 @@
 
     <footer class="text-center text-muted">
         <div class="container">
-            <p>&copy; {% now "Y" %} Tech Blog. Built with Django & Python.</p>
+            <p>&copy; {% now "Y" %} Tech Blog. Desenvolvido com Django & Python.</p>
         </div>
     </footer>
 
@@ -142,7 +142,7 @@
                         <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
                     </svg>
                 `;
-                button.title = 'Copy code';
+                button.title = 'Copiar código';
 
                 // Add click event
                 button.addEventListener('click', function () {

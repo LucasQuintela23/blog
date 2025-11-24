@@ -1,0 +1,90 @@
+/* Modern CSS Reset & Variables */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --text-color: #2c3e50;
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: var(--card-bg) !important;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--primary-color) !important;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: var(--card-bg);
+    margin-bottom: 2rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.post-meta {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+/* Content */
+.article-content {
+    font-size: 1.125rem;
+    line-height: 1.8;
+}
+
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.article-content pre {
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+/* Syntax Highlighting overrides */
+pre code.hljs {
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    font-family: 'Fira Code', monospace;
+}
+
+/* Footer */
+footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    background-color: var(--card-bg);
+    border-top: 1px solid rgba(0,0,0,0.05);
+}

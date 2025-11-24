@@ -1,0 +1,65 @@
+[project]
+name = "tech-blog"
+version = "0.1.0"
+description = "High-performance Technical Blog with Django"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Engineering Team", email = "engineering@example.com"}
+]
+dependencies = [
+    "Django>=5.0,<6.0",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0",
+    "whitenoise>=6.6",
+    "nh3>=0.2.15",
+    "markdown>=3.5",
+    "gunicorn>=21.2",
+    "dj-database-url>=2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "pytest-cov>=4.1",
+    "factory-boy>=3.3",
+    "pytest-factoryboy>=2.7.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
+    "django-stubs>=4.2",
+    "types-markdown",
+]
+
+[tool.setuptools]
+packages = ["blog", "core", "users"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "PL", "RUF"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "core.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings"
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=. --cov-report=term-missing --cov-fail-under=95"
+
+[tool.coverage.run]
+omit = [
+    "core/asgi.py",
+    "core/wsgi.py",
+    "manage.py",
+    "*/migrations/*",
+]

@@ -1,0 +1,30 @@
+Metadata-Version: 2.4
+Name: tech-blog
+Version: 0.1.0
+Summary: High-performance Technical Blog with Django
+Author-email: Engineering Team <engineering@example.com>
+License: MIT
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: Django<6.0,>=5.0
+Requires-Dist: psycopg[binary]>=3.1
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: whitenoise>=6.6
+Requires-Dist: nh3>=0.2.15
+Requires-Dist: markdown>=3.5
+Requires-Dist: gunicorn>=21.2
+Requires-Dist: dj-database-url>=2.1
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: pytest-django>=4.8; extra == "dev"
+Requires-Dist: pytest-cov>=4.1; extra == "dev"
+Requires-Dist: factory-boy>=3.3; extra == "dev"
+Requires-Dist: pytest-factoryboy>=2.7.0; extra == "dev"
+Requires-Dist: ruff>=0.3; extra == "dev"
+Requires-Dist: mypy>=1.8; extra == "dev"
+Requires-Dist: django-stubs>=4.2; extra == "dev"
+Requires-Dist: types-markdown; extra == "dev"
+
+# Tech Blog
+
+A high-performance technical blog built with Django.

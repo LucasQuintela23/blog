@@ -10,13 +10,40 @@
                 {{ post.created_at|date:"F d, Y" }}
             </time>
         </div>
-        <h1 class="display-4 fw-bold mb-4">{{ post.title }}</h1>
+        <h1 class="card-title h3 mb-2 text-dark fw-bold">{{ post.title }}</h1>
         <p class="lead text-secondary">{{ post.summary }}</p>
     </header>
 
     <div class="article-content">
         {{ post.body_html|safe }}
     </div>
+
+    <!-- Comments Section -->
+    <section class="mt-5">
+        <h3>Comments</h3>
+        {% for comment in post.comments.all %}
+        <div class="mb-3">
+            <strong>{{ comment.author }}</strong>
+            <small class="text-muted">{{ comment.created_at|date:"F d, Y H:i" }}</small>
+            <p>{{ comment.body }}</p>
+        </div>
+        {% empty %}
+        <p class="text-muted">No comments yet.</p>
+        {% endfor %}
+
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="author" class="form-label">Name</label>
+                <input type="text" class="form-control" id="author" name="author" required>
+            </div>
+            <div class="mb-3">
+                <label for="body" class="form-label">Comment</label>
+                <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </section>
 
     <hr class="my-5">
 

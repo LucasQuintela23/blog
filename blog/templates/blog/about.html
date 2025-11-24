@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ about.title }} | TechBlog{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">{{ about.title }}</h1>
+
+<div class="article-content">
+    {{ about.body_html|safe }}
+</div>
+
+<div class="mt-5 pt-4 border-top text-muted small">
+    Last updated: {{ about.updated_at|date:"F d, Y" }}
+</div>
+{% endblock %}

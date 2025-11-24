@@ -17,7 +17,12 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-bottom: 1rem;
@@ -25,7 +30,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Navbar */
 .navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     background-color: var(--card-bg) !important;
 }
 
@@ -39,22 +44,56 @@ h1, h2, h3, h4, h5, h6 {
 .card {
     border: none;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     background-color: var(--card-bg);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+}
+
+.card-title {
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.03em;
+}
+
+.card-title a {
+    color: #111 !important;
 }
 
 .post-meta {
-    font-size: 0.875rem;
-    color: #6c757d;
-    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #95a5a6;
 }
+
+/* Tags */
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    color: #6b7280;
+    background-color: transparent;
+    border: none;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.tag-badge svg {
+    flex-shrink: 0;
+}
+
+.tag-badge:hover {
+    color: #111827;
+}
+
 
 /* Content */
 .article-content {
@@ -86,5 +125,41 @@ footer {
     margin-top: 4rem;
     padding: 2rem 0;
     background-color: var(--card-bg);
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Copy Code Button */
+.copy-code-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: #6b7280;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.copy-code-btn:hover {
+    color: #111827;
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.copy-code-btn.copied {
+    color: #10b981;
+    background-color: #ecfdf5;
+    border-color: #a7f3d0;
+}
+
+.copy-code-btn svg {
+    width: 16px;
+    height: 16px;
 }

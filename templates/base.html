@@ -101,11 +101,13 @@
     </nav>
 
     <main class="container py-5">
+        {% block container_content %}
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 {% block content %}{% endblock %}
             </div>
         </div>
+        {% endblock %}
     </main>
 
     <footer class="text-center text-muted">

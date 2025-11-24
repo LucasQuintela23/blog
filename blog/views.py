@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, TemplateView
 from django.db import models
 from django.db.models import Q
-from .models import Post, Tag, Comment, About
+from .models import Post, Tag, Category, Comment, About
 
 class PostListView(ListView):
     model = Post
@@ -13,6 +13,21 @@ class PostListView(ListView):
     def get_queryset(self):
         queryset = Post.objects.filter(status=Post.Status.PUBLISHED).order_by('-created_at')
         
+        # Search functionality
+        search_query = self.request.GET.get('q')
+        if search_query:
+            from django.contrib.postgres.search import SearchQuery, SearchRank
+            # Use the search_vector field for full-text search
+            search_query_obj = SearchQuery(search_query)
+            queryset = queryset.filter(search_vector=search_query_obj).annotate(
+                rank=SearchRank('search_vector', search_query_obj)
+            ).order_by('-rank', '-created_at')
+        
+        # Filter by category if category slug is provided
+        category_slug = self.request.GET.get('category')
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+        
         # Filter by tag if tag slug is provided
         tag_slug = self.request.GET.get('tag')
         if tag_slug:
@@ -22,11 +37,26 @@ class PostListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get all tags with their post count
+        # Get all categories with their post count
         from django.db.models import Count
+        context['all_categories'] = Category.objects.annotate(
+            post_count=Count('posts', filter=models.Q(posts__status=Post.Status.PUBLISHED))
+        ).filter(post_count__gt=0).order_by('name')
+        
+        # Get all tags with their post count
         context['all_tags'] = Tag.objects.annotate(
             post_count=Count('posts', filter=models.Q(posts__status=Post.Status.PUBLISHED))
         ).filter(post_count__gt=0).order_by('-post_count')
+        
+        # Add search query to context
+        search_query = self.request.GET.get('q')
+        if search_query:
+            context['search_query'] = search_query
+        
+        # Add current category to context if filtering
+        category_slug = self.request.GET.get('category')
+        if category_slug:
+            context['current_category'] = Category.objects.filter(slug=category_slug).first()
         
         # Add current tag to context if filtering
         tag_slug = self.request.GET.get('tag')

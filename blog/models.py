@@ -5,6 +5,19 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
+
+class Category(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name=_("Name"))
+    slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
+
+    class Meta:
+        verbose_name = _("Category")
+        verbose_name_plural = _("Categories")
+
+    def __str__(self):
+        return self.name
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name=_("Name"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
@@ -35,6 +48,7 @@ class Post(models.Model):
     )
     author = models.CharField(max_length=100, default="Admin", verbose_name=_("Author"))
     read_time = models.IntegerField(default=5, verbose_name=_("Read Time (minutes)"))
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name=_("Category"))
     tags = models.ManyToManyField(Tag, related_name='posts', blank=True, verbose_name=_("Tags"))
     cover_image = models.ImageField(upload_to='posts/covers/', blank=True, null=True, verbose_name=_("Cover Image"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))

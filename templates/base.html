@@ -89,10 +89,10 @@
                         </a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <div class="search-wrapper">
-                            <input type="text" class="form-control search-input" placeholder="Search...">
-
-                        </div>
+                        <form action="{% url 'blog:post_list' %}" method="get" class="search-wrapper">
+                            <input type="text" name="q" class="form-control search-input" placeholder="Search..."
+                                value="{{ request.GET.q }}">
+                        </form>
                     </li>
 
                 </ul>

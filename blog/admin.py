@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Post, Tag, About
+from .models import Post, Tag, Category, About
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -32,8 +37,8 @@ class AboutAdmin(admin.ModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'status', 'created_at', 'cover_image')
-    list_filter = ('status', 'created_at', 'tags')
+    list_display = ('title', 'author', 'category', 'status', 'created_at', 'cover_image')
+    list_filter = ('status', 'created_at', 'category', 'tags')
     search_fields = ('title', 'summary', 'body_markdown', 'tags__name')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('html_preview', 'created_at', 'updated_at')

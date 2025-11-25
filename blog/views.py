@@ -16,12 +16,12 @@ class PostListView(ListView):
         # Search functionality
         search_query = self.request.GET.get('q')
         if search_query:
-            # Use Q objects for simple substring matching as requested
+            # Search in Title, Summary and Tags (removed body for better relevance)
             queryset = queryset.filter(
                 Q(title__icontains=search_query) |
                 Q(summary__icontains=search_query) |
-                Q(body_markdown__icontains=search_query)
-            )
+                Q(tags__name__icontains=search_query)
+            ).distinct()
         
         # Filter by category if category slug is provided
         category_slug = self.request.GET.get('category')

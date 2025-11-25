@@ -59,6 +59,78 @@
             width: 16px !important;
             height: 16px !important;
         }
+
+        /* Search Dropdown */
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            width: 400px; /* Wider than input */
+            right: 0;
+            left: auto; /* Align to right */
+        }
+
+        .search-result-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transition: background-color 0.15s;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: #f9fafb;
+            color: inherit;
+        }
+
+        .search-result-meta {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6b7280;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .search-result-title {
+            font-family: var(--font-main);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #111827;
+            margin-bottom: 0.25rem;
+        }
+
+        .search-result-snippet {
+            font-size: 0.85rem;
+            color: #4b5563;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .search-result-snippet mark {
+            background-color: rgba(52, 152, 219, 0.15);
+            color: #2c3e50;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -88,10 +160,11 @@
                             </svg>
                         </a>
                     </li>
-                    <li class="nav-item ms-lg-3">
-                        <form action="{% url 'blog:post_list' %}" method="get" class="search-wrapper">
-                            <input type="text" name="q" class="form-control search-input" placeholder="Buscar..."
+                    <li class="nav-item ms-lg-3 position-relative">
+                        <form action="{% url 'blog:post_list' %}" method="get" class="search-wrapper" autocomplete="off">
+                            <input type="text" name="q" id="searchInput" class="form-control search-input" placeholder="Buscar..."
                                 value="{{ request.GET.q }}">
+                            <div id="searchResults" class="search-dropdown shadow-sm rounded"></div>
                         </form>
                     </li>
 
@@ -122,6 +195,62 @@
     <!-- Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+
+    <!-- Search Autocomplete -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(debounceTimer);
+                const query = e.target.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`{% url 'blog:search_posts_json' %}?q=${encodeURIComponent(query)}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.results.length > 0) {
+                                searchResults.innerHTML = data.results.map(result => `
+                                    <a href="${result.url}" class="search-result-item">
+                                        <div class="search-result-meta">${result.title.toUpperCase()}</div>
+                                        <div class="search-result-title">${result.type === 'Conteúdo' ? 'Contexto Encontrado' : result.title}</div>
+                                        ${result.snippet ? `<div class="search-result-snippet">${result.snippet}</div>` : ''}
+                                    </a>
+                                `).join('');
+                                searchResults.style.display = 'block';
+                            } else {
+                                searchResults.innerHTML = `
+                                    <div class="search-result-item text-center text-muted py-3">
+                                        <small>Nenhuma informação encontrada</small>
+                                    </div>
+                                `;
+                                searchResults.style.display = 'block';
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }, 300);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        });
+    </script>
 
     <!-- Copy Code Button -->
     <script>

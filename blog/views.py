@@ -3,12 +3,15 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.db import models
 from django.db.models import Q
 from .models import Post, Tag, Category, Comment, About
+from django.http import JsonResponse
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchHeadline
+from django.urls import reverse
 
 class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
-    paginate_by = 10
+    paginate_by = 4
     
     def get_queryset(self):
         queryset = Post.objects.filter(status=Post.Status.PUBLISHED).order_by('-created_at')
@@ -88,3 +91,87 @@ class AboutView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['about'] = About.objects.first()
         return context
+
+def search_posts_json(request):
+    query = request.GET.get('q', '')
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+
+    results = []
+    seen_ids = set()
+
+    # 1. Title and Summary matches (Simple & Fast)
+    simple_matches = Post.objects.filter(
+        status=Post.Status.PUBLISHED
+    ).filter(
+        Q(title__icontains=query) | Q(summary__icontains=query)
+    ).only('title', 'slug', 'created_at', 'summary')[:5]
+    
+    for post in simple_matches:
+        seen_ids.add(post.id)
+        
+        # Determine match type and snippet
+        if query.lower() in post.title.lower():
+            match_type = 'Título'
+            snippet = post.summary[:150] + '...' if post.summary else ''
+        else:
+            match_type = 'Resumo'
+            # Simple highlight for summary
+            import re
+            text = post.summary
+            # Case insensitive replace to add mark tags
+            pattern = re.compile(re.escape(query), re.IGNORECASE)
+            snippet = pattern.sub(lambda m: f'<mark>{m.group()}</mark>', text)
+
+        results.append({
+            'title': post.title,
+            'url': reverse('blog:post_detail', args=[post.slug]),
+            'snippet': snippet,
+            'date': post.created_at.strftime('%Y - %B'),
+            'type': match_type
+        })
+        
+    # 2. Body matches (using SearchHeadline for context)
+    try:
+        search_query = SearchQuery(query, config='portuguese')
+        body_matches = Post.objects.filter(
+            status=Post.Status.PUBLISHED
+        ).exclude(
+            id__in=seen_ids
+        ).annotate(
+            headline=SearchHeadline(
+                'body_text',
+                search_query,
+                start_sel='<mark>',
+                stop_sel='</mark>',
+                config='portuguese'
+            )
+        ).filter(headline__icontains=query)[:5]
+        
+        for post in body_matches:
+            results.append({
+                'title': post.title,
+                'url': reverse('blog:post_detail', args=[post.slug]),
+                'snippet': post.headline, 
+                'date': post.created_at.strftime('%Y - %B'),
+                'type': 'Conteúdo'
+            })
+            
+    except Exception as e:
+        print(f"Search error: {e}")
+        # Fallback: Simple contains search on body if Postgres search fails
+        fallback_matches = Post.objects.filter(
+            status=Post.Status.PUBLISHED,
+            body_text__icontains=query
+        ).exclude(id__in=seen_ids)[:3]
+        
+        for post in fallback_matches:
+             results.append({
+                'title': post.title,
+                'url': reverse('blog:post_detail', args=[post.slug]),
+                'snippet': '...conteúdo encontrado...', 
+                'date': post.created_at.strftime('%Y - %B'),
+                'type': 'Conteúdo'
+            })
+
+    return JsonResponse({'results': results})

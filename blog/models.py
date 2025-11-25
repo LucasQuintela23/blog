@@ -1,6 +1,7 @@
 import nh3
 import markdown
 from django.db import models
+from django.utils.html import strip_tags
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
@@ -40,6 +41,7 @@ class Post(models.Model):
     summary = models.TextField(verbose_name=_("Resumo"))
     body_markdown = models.TextField(verbose_name=_("Conteúdo Markdown"))
     body_html = models.TextField(editable=False, verbose_name=_("Conteúdo HTML"))
+    body_text = models.TextField(editable=False, verbose_name=_("Conteúdo Texto"), blank=True)
     status = models.CharField(
         max_length=2,
         choices=Status.choices,
@@ -91,6 +93,7 @@ class Post(models.Model):
         )
         
         self.body_html = clean_html
+        self.body_text = strip_tags(clean_html)
         
         super().save(*args, **kwargs)
         

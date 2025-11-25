@@ -39,7 +39,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.locale.LocaleMiddleware",  # i18n
+    # "django.middleware.locale.LocaleMiddleware",  # i18n removed to force default language
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -113,7 +113,6 @@ USE_TZ = True
 
 LANGUAGES = [
     ("pt-br", _("Portuguese")),
-    ("en", _("English")),
 ]
 
 LOCALE_PATHS = [

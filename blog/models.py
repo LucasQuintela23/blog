@@ -7,19 +7,19 @@ from django.contrib.postgres.indexes import GinIndex
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name=_("Name"))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_("Nome"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
 
     class Meta:
-        verbose_name = _("Category")
-        verbose_name_plural = _("Categories")
+        verbose_name = _("Categoria")
+        verbose_name_plural = _("Categorias")
 
     def __str__(self):
         return self.name
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name=_("Name"))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_("Nome"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
 
     class Meta:
@@ -32,33 +32,33 @@ class Tag(models.Model):
 
 class Post(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'DF', _('Draft')
-        PUBLISHED = 'PB', _('Published')
+        DRAFT = 'DF', _('Rascunho')
+        PUBLISHED = 'PB', _('Publicado')
 
-    title = models.CharField(max_length=255, verbose_name=_("Title"))
+    title = models.CharField(max_length=255, verbose_name=_("Título"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
-    summary = models.TextField(verbose_name=_("Summary"))
-    body_markdown = models.TextField(verbose_name=_("Markdown Content"))
-    body_html = models.TextField(editable=False, verbose_name=_("HTML Content"))
+    summary = models.TextField(verbose_name=_("Resumo"))
+    body_markdown = models.TextField(verbose_name=_("Conteúdo Markdown"))
+    body_html = models.TextField(editable=False, verbose_name=_("Conteúdo HTML"))
     status = models.CharField(
         max_length=2,
         choices=Status.choices,
         default=Status.DRAFT,
         verbose_name=_("Status")
     )
-    author = models.CharField(max_length=100, default="Admin", verbose_name=_("Author"))
-    read_time = models.IntegerField(default=5, verbose_name=_("Read Time (minutes)"))
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name=_("Category"))
+    author = models.CharField(max_length=100, default="Admin", verbose_name=_("Autor"))
+    read_time = models.IntegerField(default=5, verbose_name=_("Tempo de Leitura (minutos)"))
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name=_("Categoria"))
     tags = models.ManyToManyField(Tag, related_name='posts', blank=True, verbose_name=_("Tags"))
-    cover_image = models.ImageField(upload_to='posts/covers/', blank=True, null=True, verbose_name=_("Cover Image"))
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+    cover_image = models.ImageField(upload_to='posts/covers/', blank=True, null=True, verbose_name=_("Imagem de Capa"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Criado em"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Atualizado em"))
     
     search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
-        verbose_name = _("Post")
-        verbose_name_plural = _("Posts")
+        verbose_name = _("Postagem")
+        verbose_name_plural = _("Postagens")
         indexes = [
             GinIndex(fields=['search_vector']),
         ]
@@ -106,14 +106,14 @@ class Post(models.Model):
 
 
 class About(models.Model):
-    title = models.CharField(max_length=255, default="About Me", verbose_name=_("Title"))
-    body_markdown = models.TextField(verbose_name=_("Markdown Content"))
-    body_html = models.TextField(editable=False, verbose_name=_("HTML Content"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+    title = models.CharField(max_length=255, default="Sobre Mim", verbose_name=_("Título"))
+    body_markdown = models.TextField(verbose_name=_("Conteúdo Markdown"))
+    body_html = models.TextField(editable=False, verbose_name=_("Conteúdo HTML"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Atualizado em"))
 
     class Meta:
-        verbose_name = _("About Page")
-        verbose_name_plural = _("About Page")
+        verbose_name = _("Página Sobre")
+        verbose_name_plural = _("Página Sobre")
 
     def save(self, *args, **kwargs):
         # 1. Convert Markdown to HTML
@@ -149,14 +149,14 @@ class About(models.Model):
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
-    author = models.CharField(max_length=100, verbose_name=_('Author'))
-    body = models.TextField(verbose_name=_('Comment'))
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Created At'))
+    author = models.CharField(max_length=100, verbose_name=_('Autor'))
+    body = models.TextField(verbose_name=_('Comentário'))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Criado em'))
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = _('Comment')
-        verbose_name_plural = _('Comments')
+        verbose_name = _('Comentário')
+        verbose_name_plural = _('Comentários')
 
     def __str__(self):
-        return f"Comment by {self.author} on {self.post.title}"
+        return f"Comentário de {self.author} em {self.post.title}"

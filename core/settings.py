@@ -17,6 +17,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 # Application definition
 
 INSTALLED_APPS = [
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -124,6 +125,7 @@ LOCALE_PATHS = [
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (User uploaded)
@@ -137,3 +139,51 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
 # AUTH_USER_MODEL = "users.User" # Uncomment when User model is ready
+
+# Jazzmin Settings
+JAZZMIN_SETTINGS = {
+    "site_title": "Admin Tech Blog",
+    "site_header": "Tech Blog",
+    "site_brand": "Tech Blog",
+    "welcome_sign": "Bem-vindo ao Tech Blog",
+    "copyright": "Tech Blog",
+    "search_model": ["auth.User", "blog.Post"],
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Início",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Ver Site", "url": "/", "new_window": True},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "blog.Post": "fas fa-newspaper",
+        "blog.Category": "fas fa-folder",
+        "blog.Tag": "fas fa-tag",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": False,
+    "custom_css": "css/admin-custom.css",
+    "show_ui_builder": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-white",
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "theme": "default",
+}

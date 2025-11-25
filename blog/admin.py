@@ -20,7 +20,7 @@ class AboutAdmin(admin.ModelAdmin):
         from django.utils.html import mark_safe
         return mark_safe(obj.body_html) if obj.body_html else ""
     
-    html_preview.short_description = "HTML Preview (Saved)"
+    html_preview.short_description = "Pré-visualização HTML (Salvo)"
 
     class Media:
         js = (
@@ -48,7 +48,7 @@ class PostAdmin(admin.ModelAdmin):
         from django.utils.html import mark_safe
         return mark_safe(obj.body_html) if obj.body_html else ""
     
-    html_preview.short_description = "HTML Preview (Saved)"
+    html_preview.short_description = "Pré-visualização HTML (Salvo)"
 
     class Media:
         js = (

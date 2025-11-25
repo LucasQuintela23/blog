@@ -1,0 +1,77 @@
+.login-page-wrapper {
+    min-height: calc(100vh - 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: radial-gradient(circle at top, rgba(59, 130, 246, 0.1), transparent 40%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.login-card .card-body {
+    padding: 2.5rem 2rem;
+    background-color: #fff;
+}
+
+.login-card .form-label {
+    font-weight: 600;
+    color: #242424;
+    letter-spacing: -0.01em;
+}
+
+.login-form .form-row {
+    margin-bottom: 1rem;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background-color: rgba(15, 23, 42, 0.02);
+    font-size: 1rem;
+    font-family: var(--admin-font-stack);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-form input:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25);
+}
+
+.login-form .password-reset-link a {
+    font-size: 0.85rem;
+    color: #1d4ed8;
+}
+
+.login-form .submit-row {
+    margin-top: 1rem;
+}
+
+.login-form .submit-row input[type="submit"] {
+    width: 100%;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.login-alert {
+    border-radius: 0.8rem;
+}
+
+@media (max-width: 576px) {
+    .login-card .card-body {
+        padding: 2rem 1.25rem;
+    }
+}

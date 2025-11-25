@@ -1,0 +1,131 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .dashboard-item { transition: all 0.2s; }
+    .dashboard-item:hover { background-color: #f8f9fa; }
+    .actionlist { list-style: none; padding-left: 0; }
+    .actionlist li { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    .actionlist li:last-child { border-bottom: none; }
+    .actionlist .text-muted { font-size: 0.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- App List -->
+    <div class="col-lg-8">
+        {% if app_list %}
+            {% for app in app_list %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <a href="{{ app.app_url }}" class="text-decoration-none text-dark fw-bold" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">
+                            {{ app.name }}
+                        </a>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">{% translate 'Model' %}</th>
+                                    <th scope="col" class="text-end pe-4" style="width: 200px;">{% translate 'Actions' %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model in app.models %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" class="ps-4 fw-normal">
+                                        {% if model.admin_url %}
+                                            <a href="{{ model.admin_url }}" class="text-decoration-none text-primary fw-medium">{{ model.name }}</a>
+                                        {% else %}
+                                            {{ model.name }}
+                                        {% endif %}
+                                    </th>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            {% if model.add_url %}
+                                                <a href="{{ model.add_url }}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-plus-lg"></i> {% translate 'Add' %}
+                                                </a>
+                                            {% endif %}
+                                            {% if model.admin_url %}
+                                                {% if model.view_only %}
+                                                    <a href="{{ model.admin_url }}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-eye"></i> {% translate 'View' %}
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ model.admin_url }}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i> {% translate 'Change' %}
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">{% translate 'You don’t have permission to view or edit anything.' %}</div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar / Recent Actions -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0">{% translate 'Recent actions' %}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small fw-bold mb-3">{% translate 'My actions' %}</h6>
+                {% load log %}
+                {% get_admin_log 10 as admin_log for_user user %}
+                {% if not admin_log %}
+                    <p class="text-muted">{% translate 'None available' %}</p>
+                {% else %}
+                    <ul class="actionlist">
+                    {% for entry in admin_log %}
+                        <li class="d-flex align-items-start">
+                            <div class="me-2 mt-1">
+                                {% if entry.is_addition %}
+                                    <span class="badge bg-success rounded-pill"><i class="bi bi-plus"></i></span>
+                                {% elif entry.is_change %}
+                                    <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-pencil"></i></span>
+                                {% elif entry.is_deletion %}
+                                    <span class="badge bg-danger rounded-pill"><i class="bi bi-trash"></i></span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if entry.is_deletion or not entry.get_admin_url %}
+                                    <span class="d-block text-dark">{{ entry.object_repr }}</span>
+                                {% else %}
+                                    <a href="{{ entry.get_admin_url }}" class="d-block text-decoration-none fw-medium">{{ entry.object_repr }}</a>
+                                {% endif %}
+                                <span class="d-block text-muted small">
+                                    {% if entry.content_type %}
+                                        <span class="text-uppercase" style="font-size: 0.7rem;">{{ entry.content_type.name }}</span>
+                                    {% else %}
+                                        {% translate 'Unknown content' %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

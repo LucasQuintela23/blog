@@ -76,8 +76,7 @@
                         {% if page_obj.paginator.count == 1 %}
                         <strong>1 artigo encontrado relacionado a</strong> "{{ search_query }}"
                         {% elif page_obj.paginator.count > 1 %}
-                        <strong>{{ page_obj.paginator.count }} artigos encontrados relacionados a</strong> "{{
-                        search_query }}"
+                        <strong>{{ page_obj.paginator.count }} artigos encontrados relacionados a</strong> "{{ search_query }}"
                         {% else %}
                         <strong>Nenhum artigo encontrado relacionado a</strong> "{{ search_query }}"
                         {% endif %}
@@ -90,8 +89,7 @@
                         {% if page_obj.paginator.count == 1 %}
                         <strong>1 artigo encontrado na categoria</strong> "{{ current_category.name }}"
                         {% elif page_obj.paginator.count > 1 %}
-                        <strong>{{ page_obj.paginator.count }} artigos encontrados na categoria</strong> "{{
-                        current_category.name }}"
+                        <strong>{{ page_obj.paginator.count }} artigos encontrados na categoria</strong> "{{ current_category.name }}"
                         {% else %}
                         <strong>Nenhum artigo encontrado na categoria</strong> "{{ current_category.name }}"
                         {% endif %}
@@ -104,8 +102,7 @@
                         {% if page_obj.paginator.count == 1 %}
                         <strong>1 artigo encontrado com a tag</strong> "{{ current_tag.name }}"
                         {% elif page_obj.paginator.count > 1 %}
-                        <strong>{{ page_obj.paginator.count }} artigos encontrados com a tag</strong> "{{
-                        current_tag.name }}"
+                        <strong>{{ page_obj.paginator.count }} artigos encontrados com a tag</strong> "{{ current_tag.name }}"
                         {% else %}
                         <strong>Nenhum artigo encontrado com a tag</strong> "{{ current_tag.name }}"
                         {% endif %}

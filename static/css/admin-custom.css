@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --admin-font-stack: 'Söhne', 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+body, h1, h2, h3, h4, h5, h6, .btn, .form-control, .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link {
+    font-family: var(--admin-font-stack) !important;
+}
+
+/* Improve spacing in tables */
+.table td, .table th {
+    vertical-align: middle;
+}
+
+/* Clean up the brand link */
+.brand-link {
+    font-weight: 700 !important;
+}

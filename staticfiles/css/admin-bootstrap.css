@@ -1,0 +1,232 @@
+:root {
+    --admin-font-stack: 'Söhne', 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', sans-serif;
+    --admin-bg: #f4f5f7;
+    --admin-panel-bg: #ffffff;
+    --admin-border: rgba(15, 23, 42, 0.08);
+    --sidebar-bg: #2c3e50;
+    --sidebar-width: 280px;
+}
+
+body {
+    font-family: var(--admin-font-stack);
+    background-color: var(--admin-bg);
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--sidebar-bg) !important;
+    min-height: 100vh;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Django Nav Sidebar Overrides */
+.admin-sidebar-wrapper .module {
+    margin-bottom: 1rem;
+}
+
+.admin-sidebar-wrapper caption {
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0;
+    display: block;
+}
+
+.admin-sidebar-wrapper table {
+    width: 100%;
+}
+
+.admin-sidebar-wrapper th,
+.admin-sidebar-wrapper td {
+    padding: 0;
+    border: none;
+}
+
+.admin-sidebar-wrapper a {
+    display: block;
+    padding: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.admin-sidebar-wrapper a:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding-left: 0.5rem;
+    border-radius: 4px;
+}
+
+.admin-sidebar-wrapper .current-app .section {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Hide SVGs that might be leaking */
+.base-svgs {
+    display: none !important;
+}
+
+/* Ensure header doesn't have weird background from base.css */
+header {
+    background: #fff !important;
+}
+
+/* Ensure sidebar text is visible */
+.sidebar, .sidebar a {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Fix user tools alignment */
+#user-tools {
+    font-size: 0.875rem;
+}
+
+.user-tools-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+/* Main Content */
+main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#content {
+    flex: 1;
+    background: var(--admin-panel-bg);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+#content h1 {
+    font-family: var(--admin-font-stack);
+    font-weight: 700;
+    color: #242424;
+    letter-spacing: -0.02em;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.breadcrumbs a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+#footer {
+    padding: 1.5rem;
+    color: #6c757d;
+}
+
+/* Responsive */
+@media (max-width: 767.98px) {
+    .sidebar {
+        min-height: auto;
+    }
+}
+
+/* Changelist & Tables */
+#changelist table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1rem;
+}
+
+#changelist table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+#changelist table tbody td,
+#changelist table tbody th {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+    color: #242424;
+}
+
+#changelist table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+#changelist .paginator {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+/* Object Tools (Add button etc) */
+.object-tools {
+    float: none;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.object-tools li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.object-tools a {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.object-tools a:hover {
+    background-color: #0b5ed7;
+}
+
+.object-tools a.addlink {
+    padding-left: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='18px' height='18px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 0.5rem center;
+}
+
+/* Fix for Django's default hidden header */
+#changelist .results thead th .text a {
+    color: #495057;
+    text-decoration: none;
+}

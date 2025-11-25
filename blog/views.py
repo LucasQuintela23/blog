@@ -16,12 +16,12 @@ class PostListView(ListView):
         # Search functionality
         search_query = self.request.GET.get('q')
         if search_query:
-            from django.contrib.postgres.search import SearchQuery, SearchRank
-            # Use the search_vector field for full-text search
-            search_query_obj = SearchQuery(search_query)
-            queryset = queryset.filter(search_vector=search_query_obj).annotate(
-                rank=SearchRank('search_vector', search_query_obj)
-            ).order_by('-rank', '-created_at')
+            # Use Q objects for simple substring matching as requested
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(summary__icontains=search_query) |
+                Q(body_markdown__icontains=search_query)
+            )
         
         # Filter by category if category slug is provided
         category_slug = self.request.GET.get('category')

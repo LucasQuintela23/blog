@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from django.db import models
 from django.db.models import Q
@@ -14,7 +14,7 @@ class PostListView(ListView):
     paginate_by = 4
     
     def get_queryset(self):
-        queryset = Post.objects.filter(status=Post.Status.PUBLISHED).order_by('-created_at')
+        queryset = Post.objects.filter(status=Post.Status.PUBLISHED).order_by('-created_at').select_related('category').prefetch_related('tags')
         
         # Search functionality
         search_query = self.request.GET.get('q')
@@ -76,11 +76,16 @@ class PostDetailView(DetailView):
     slug_url_kwarg = 'slug'
 
     def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('login')}?next={request.path}")
+            
         self.object = self.get_object()
-        author = request.POST.get('author')
         body = request.POST.get('body')
-        if author and body:
+        
+        if body:
+            author = request.user.get_full_name() or request.user.username
             Comment.objects.create(post=self.object, author=author, body=body)
+            
         return self.get(request, *args, **kwargs)
 
 

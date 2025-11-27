@@ -1,6 +1,8 @@
 from django import template
 from django.utils.safestring import mark_safe
 import re
+from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount import providers
 
 register = template.Library()
 
@@ -35,3 +37,13 @@ def highlight(text, search_query):
     )
     
     return mark_safe(highlighted)
+
+@register.simple_tag
+def is_provider_configured(provider_id):
+    """
+    Checks if a SocialApp is configured for the given provider_id.
+    """
+    try:
+        return SocialApp.objects.filter(provider=provider_id).exists()
+    except Exception:
+        return False

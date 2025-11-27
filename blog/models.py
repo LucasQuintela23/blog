@@ -65,6 +65,10 @@ class Post(models.Model):
             GinIndex(fields=['search_vector']),
         ]
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('blog:post_detail', kwargs={'slug': self.slug})
+
     def save(self, *args, **kwargs):
         # 1. Convert Markdown to HTML
         # Using extra for tables, etc., and codehilite for syntax highlighting

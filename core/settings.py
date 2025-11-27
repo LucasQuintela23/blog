@@ -28,6 +28,16 @@ INSTALLED_APPS = [
     
     # Third party
     "whitenoise.runserver_nostatic",
+    "django.contrib.sites",  # Required by allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.facebook",
+    "allauth.socialaccount.providers.twitter",
+    "allauth.socialaccount.providers.microsoft",
+    "allauth.socialaccount.providers.apple",
+    "allauth.socialaccount.providers.github",
     
     # Local
     "core",
@@ -45,9 +55,40 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+SITE_ID = 1
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+    },
+    'microsoft': {
+        'TENANT': 'common',
+    },
+    'github': {
+        'SCOPE': [
+            'user',
+            'repo',
+            'read:org',
+        ],
+    },
+    # Twitter and Apple usually don't need extra config for basic login
+}
 
 TEMPLATES = [
     {
@@ -186,3 +227,6 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_small_text": False,
     "theme": "default",
 }
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

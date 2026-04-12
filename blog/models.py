@@ -1,10 +1,84 @@
 import nh3
 import markdown
+import re
 from django.db import models
 from django.utils.html import strip_tags
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
+
+
+def _normalize_unclosed_code_fences(markdown_text: str) -> str:
+    """Auto-close unbalanced fenced code blocks to keep preview and publish consistent."""
+    if not markdown_text:
+        return markdown_text
+
+    fence_count = markdown_text.count("```")
+    if fence_count % 2 != 0:
+        return f"{markdown_text.rstrip()}\n```"
+    return markdown_text
+
+
+def _looks_like_html(content: str) -> bool:
+    return bool(content and re.search(r"<\s*[a-zA-Z][^>]*>", content))
+
+
+def _normalize_mermaid_blocks(markdown_text: str) -> str:
+    """Wrap plain Mermaid text into fenced mermaid blocks when needed."""
+    if not markdown_text or "```mermaid" in markdown_text:
+        return markdown_text
+
+    lines = markdown_text.splitlines()
+    out = []
+    i = 0
+
+    while i < len(lines):
+        current = lines[i].strip()
+        starts_mermaid = current.startswith("graph ") or current.startswith("flowchart ")
+        if not starts_mermaid:
+            out.append(lines[i])
+            i += 1
+            continue
+
+        block = [lines[i]]
+        i += 1
+        while i < len(lines) and lines[i].strip():
+            block.append(lines[i])
+            i += 1
+
+        out.append("```mermaid")
+        out.extend(block)
+        out.append("```")
+
+        if i < len(lines):
+            out.append(lines[i])
+            i += 1
+
+    return "\n".join(out)
+
+
+def _sanitize_html(html_content: str) -> str:
+    allowed_tags = {
+        'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i',
+        'li', 'ol', 'p', 'pre', 'strong', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span',
+        'video', 'source', 'iframe', 'figure', 'figcaption'
+    }
+    allowed_attributes = {
+        'a': {'href', 'title', 'target'},
+        'img': {'src', 'alt', 'title', 'width', 'height'},
+        'source': {'src', 'type'},
+        'video': {'controls', 'width', 'height', 'autoplay', 'loop', 'muted', 'poster'},
+        'iframe': {'src', 'title', 'width', 'height', 'allow', 'allowfullscreen', 'frameborder'},
+        '*': {'class', 'id', 'style'},
+    }
+
+    return nh3.clean(
+        html_content,
+        tags=allowed_tags,
+        attributes=allowed_attributes,
+        link_rel="noopener noreferrer"
+    )
 
 
 class Category(models.Model):
@@ -70,31 +144,21 @@ class Post(models.Model):
         return reverse('blog:post_detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
-        # 1. Convert Markdown to HTML
-        # Using extra for tables, etc., and codehilite for syntax highlighting
-        html_content = markdown.markdown(
-            self.body_markdown,
-            extensions=['extra', 'codehilite', 'toc']
-        )
-        
-        # 2. Sanitize HTML with nh3 (strict)
-        allowed_tags = {
-            'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 
-            'li', 'ol', 'p', 'pre', 'strong', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span'
-        }
-        allowed_attributes = {
-            'a': {'href', 'title', 'target'},
-            'img': {'src', 'alt', 'title', 'width', 'height'},
-            '*': {'class', 'id'}, # Allow class for syntax highlighting and IDs for anchors
-        }
-        
-        clean_html = nh3.clean(
-            html_content, 
-            tags=allowed_tags, 
-            attributes=allowed_attributes,
-            link_rel="noopener noreferrer"
-        )
+        source_markdown = self.body_markdown or ""
+        self.body_markdown = source_markdown
+
+        if _looks_like_html(source_markdown):
+            html_content = source_markdown
+        else:
+            normalized_markdown = _normalize_mermaid_blocks(
+                _normalize_unclosed_code_fences(source_markdown)
+            )
+            html_content = markdown.markdown(
+                normalized_markdown,
+                extensions=['extra', 'codehilite', 'toc']
+            )
+
+        clean_html = _sanitize_html(html_content)
         
         self.body_html = clean_html
         self.body_text = strip_tags(clean_html)
@@ -123,30 +187,21 @@ class About(models.Model):
         verbose_name_plural = _("Página Sobre")
 
     def save(self, *args, **kwargs):
-        # 1. Convert Markdown to HTML
-        html_content = markdown.markdown(
-            self.body_markdown,
-            extensions=['extra', 'codehilite', 'toc']
-        )
-        
-        # 2. Sanitize HTML
-        allowed_tags = {
-            'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 
-            'li', 'ol', 'p', 'pre', 'strong', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'img', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span'
-        }
-        allowed_attributes = {
-            'a': {'href', 'title', 'target'},
-            'img': {'src', 'alt', 'title', 'width', 'height'},
-            '*': {'class', 'id'},
-        }
-        
-        clean_html = nh3.clean(
-            html_content, 
-            tags=allowed_tags, 
-            attributes=allowed_attributes,
-            link_rel="noopener noreferrer"
-        )
+        source_markdown = self.body_markdown or ""
+        self.body_markdown = source_markdown
+
+        if _looks_like_html(source_markdown):
+            html_content = source_markdown
+        else:
+            normalized_markdown = _normalize_mermaid_blocks(
+                _normalize_unclosed_code_fences(source_markdown)
+            )
+            html_content = markdown.markdown(
+                normalized_markdown,
+                extensions=['extra', 'codehilite', 'toc']
+            )
+
+        clean_html = _sanitize_html(html_content)
         
         self.body_html = clean_html
         super().save(*args, **kwargs)

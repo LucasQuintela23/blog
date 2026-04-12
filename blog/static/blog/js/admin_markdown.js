@@ -2,6 +2,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const markdownField = document.getElementById('id_body_markdown');
     if (!markdownField) return;
 
+    function normalizeUnclosedCodeFences(markdownText) {
+        const matches = markdownText.match(/```/g);
+        const fenceCount = matches ? matches.length : 0;
+        if (fenceCount % 2 !== 0) {
+            return `${markdownText.replace(/\s*$/, '')}\n\n\`\`\``;
+        }
+        return markdownText;
+    }
+
     // Create preview container
     const previewContainer = document.createElement('div');
     previewContainer.className = 'markdown-preview-container';
@@ -19,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to update preview
     function updatePreview() {
-        const markdownText = markdownField.value;
+        const markdownText = normalizeUnclosedCodeFences(markdownField.value);
         // Use marked library if available, otherwise fallback or wait
         if (typeof marked !== 'undefined') {
             previewContent.innerHTML = marked.parse(markdownText);

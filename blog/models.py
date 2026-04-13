@@ -122,6 +122,37 @@ def _translate_with_libretranslate(text: str, target_language: str) -> str:
         return text
 
 
+def _translate_markdown_preserving_code(markdown_text: str, target_language: str) -> str:
+    """Translate markdown text while preserving fenced and inline code spans."""
+    if not markdown_text or not markdown_text.strip():
+        return markdown_text
+
+    # Ensure unclosed fences are balanced before masking code blocks.
+    normalized_markdown = _normalize_unclosed_code_fences(markdown_text)
+
+    placeholders: dict[str, str] = {}
+
+    def replace_fenced(match: re.Match[str]) -> str:
+        token = f"ZXQFENCEDBLOCK{len(placeholders)}QXZ"
+        placeholders[token] = match.group(0)
+        return token
+
+    def replace_inline(match: re.Match[str]) -> str:
+        token = f"ZXQINLINECODE{len(placeholders)}QXZ"
+        placeholders[token] = match.group(0)
+        return token
+
+    masked = re.sub(r"```[\s\S]*?(?:```|$)", replace_fenced, normalized_markdown)
+    masked = re.sub(r"`[^`\n]+`", replace_inline, masked)
+
+    translated = _translate_with_libretranslate(masked, target_language)
+
+    for token, original in placeholders.items():
+        translated = translated.replace(token, original)
+
+    return translated
+
+
 def _needs_translation(source_text: str, translated_text: str) -> bool:
     source = (source_text or '').strip()
     translated = (translated_text or '').strip()
@@ -225,7 +256,7 @@ class Post(models.Model):
             if translated and translated.strip() and translated.strip() != (self.summary or '').strip():
                 self.summary_en = translated
         if _needs_translation(source_markdown, self.body_markdown_en):
-            translated = _translate_with_libretranslate(source_markdown, 'en')
+            translated = _translate_markdown_preserving_code(source_markdown, 'en')
             if translated and translated.strip() and translated.strip() != source_markdown.strip():
                 self.body_markdown_en = translated
 
@@ -238,7 +269,7 @@ class Post(models.Model):
             if translated and translated.strip() and translated.strip() != (self.summary or '').strip():
                 self.summary_es = translated
         if _needs_translation(source_markdown, self.body_markdown_es):
-            translated = _translate_with_libretranslate(source_markdown, 'es')
+            translated = _translate_markdown_preserving_code(source_markdown, 'es')
             if translated and translated.strip() and translated.strip() != source_markdown.strip():
                 self.body_markdown_es = translated
 
@@ -302,7 +333,7 @@ class Post(models.Model):
                     self.summary_en = translated
                     changed = True
             if _needs_translation(source_body, self.body_markdown_en):
-                translated = _translate_with_libretranslate(source_body, 'en')
+                translated = _translate_markdown_preserving_code(source_body, 'en')
                 if translated and translated.strip() != source_body.strip():
                     self.body_markdown_en = translated
                     changed = True
@@ -318,7 +349,7 @@ class Post(models.Model):
                     self.summary_es = translated
                     changed = True
             if _needs_translation(source_body, self.body_markdown_es):
-                translated = _translate_with_libretranslate(source_body, 'es')
+                translated = _translate_markdown_preserving_code(source_body, 'es')
                 if translated and translated.strip() != source_body.strip():
                     self.body_markdown_es = translated
                     changed = True
@@ -329,7 +360,7 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-    def get_translated_content(self, language_code: str) -> dict:
+    def get_translated_content(self, language_code: str) -> dict[str, str]:
         """Return post content for selected language with fallback to PT-BR."""
         lang = (language_code or 'pt').lower()
 
@@ -395,11 +426,11 @@ class About(models.Model):
                 self.title_es = translated
 
         if _needs_translation(source_markdown, self.body_markdown_en):
-            translated = _translate_with_libretranslate(source_markdown, 'en')
+            translated = _translate_markdown_preserving_code(source_markdown, 'en')
             if translated and translated.strip() and translated.strip() != source_markdown.strip():
                 self.body_markdown_en = translated
         if _needs_translation(source_markdown, self.body_markdown_es):
-            translated = _translate_with_libretranslate(source_markdown, 'es')
+            translated = _translate_markdown_preserving_code(source_markdown, 'es')
             if translated and translated.strip() and translated.strip() != source_markdown.strip():
                 self.body_markdown_es = translated
 
@@ -432,7 +463,7 @@ class About(models.Model):
                     self.title_en = translated
                     changed = True
             if _needs_translation(source_body, self.body_markdown_en):
-                translated = _translate_with_libretranslate(source_body, 'en')
+                translated = _translate_markdown_preserving_code(source_body, 'en')
                 if translated and translated.strip() != source_body.strip():
                     self.body_markdown_en = translated
                     changed = True
@@ -443,7 +474,7 @@ class About(models.Model):
                     self.title_es = translated
                     changed = True
             if _needs_translation(source_body, self.body_markdown_es):
-                translated = _translate_with_libretranslate(source_body, 'es')
+                translated = _translate_markdown_preserving_code(source_body, 'es')
                 if translated and translated.strip() != source_body.strip():
                     self.body_markdown_es = translated
                     changed = True
@@ -451,7 +482,7 @@ class About(models.Model):
         if changed:
             self.save()
 
-    def get_translated_content(self, language_code: str) -> dict:
+    def get_translated_content(self, language_code: str) -> dict[str, str]:
         lang = (language_code or 'pt').lower()
         if lang == 'en':
             return {

@@ -1,10 +1,36 @@
-from typing import Dict
+from typing import Literal, TypedDict
+
+from django.http import HttpRequest
 
 
-SUPPORTED_POST_LANGUAGES = {"pt", "en", "es"}
+LanguageCode = Literal["pt", "en", "es"]
 
 
-UI_LABELS: Dict[str, Dict[str, str]] = {
+class LabelsDict(TypedDict):
+    nav_articles: str
+    nav_about: str
+    nav_contact: str
+    search_placeholder: str
+    latest_posts: str
+    categories: str
+    tags: str
+    read_article: str
+    no_posts: str
+    search_no_results: str
+    back_to_list: str
+    about_last_update: str
+    footer_rights: str
+
+
+class UiLabelsContext(TypedDict):
+    selected_language: LanguageCode
+    ui_labels: LabelsDict
+
+
+SUPPORTED_POST_LANGUAGES: set[LanguageCode] = {"pt", "en", "es"}
+
+
+UI_LABELS: dict[LanguageCode, LabelsDict] = {
     "pt": {
         "nav_articles": "Artigos",
         "nav_about": "Sobre",
@@ -18,6 +44,7 @@ UI_LABELS: Dict[str, Dict[str, str]] = {
         "search_no_results": "Nenhuma informação encontrada",
         "back_to_list": "Voltar à lista",
         "about_last_update": "Última atualização",
+        "footer_rights": "Todos os direitos reservados.",
     },
     "en": {
         "nav_articles": "Articles",
@@ -32,6 +59,7 @@ UI_LABELS: Dict[str, Dict[str, str]] = {
         "search_no_results": "No information found",
         "back_to_list": "Back to list",
         "about_last_update": "Last update",
+        "footer_rights": "All rights reserved.",
     },
     "es": {
         "nav_articles": "Artículos",
@@ -46,16 +74,19 @@ UI_LABELS: Dict[str, Dict[str, str]] = {
         "search_no_results": "No se encontró información",
         "back_to_list": "Volver a la lista",
         "about_last_update": "Última actualización",
+        "footer_rights": "Todos los derechos reservados.",
     },
 }
 
 
-def get_selected_language(request):
+def get_selected_language(request: HttpRequest) -> LanguageCode:
     lang = (request.GET.get("lang") or "pt").lower()
-    return lang if lang in SUPPORTED_POST_LANGUAGES else "pt"
+    if lang in SUPPORTED_POST_LANGUAGES:
+        return lang
+    return "pt"
 
 
-def ui_labels(request):
+def ui_labels(request: HttpRequest) -> UiLabelsContext:
     lang = get_selected_language(request)
     return {
         "selected_language": lang,

@@ -64,6 +64,29 @@
 
     if (diagramIndex > 0) {
         mermaid.run({ querySelector: '.mermaid' });
+
+        // Clean occasional fence/style artifacts left by malformed translated markdown.
+        const isFenceMarker = (text) => {
+            const normalized = (text || '').trim();
+            return normalized === '`mermaid' || normalized === '```mermaid';
+        };
+
+        const isStyleDirective = (text) => {
+            const normalized = (text || '').trim();
+            return /^style\s+[A-Za-z0-9_]+\s+fill:/i.test(normalized);
+        };
+
+        document.querySelectorAll('.prose .mermaid').forEach((diagram) => {
+            const prev = diagram.previousElementSibling;
+            if (prev && isFenceMarker(prev.textContent)) {
+                prev.remove();
+            }
+
+            const next = diagram.nextElementSibling;
+            if (next && isStyleDirective(next.textContent)) {
+                next.remove();
+            }
+        });
     }
 </script>
 {% endblock %}

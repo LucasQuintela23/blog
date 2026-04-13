@@ -36,7 +36,7 @@ dev = [
     "pytest-factoryboy>=2.7.0",
     "ruff>=0.3",
     "mypy>=1.8",
-    "django-stubs>=4.2",
+    "django-stubs>=5.0.0",
     "types-markdown",
 ]
 

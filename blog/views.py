@@ -1,22 +1,29 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, TemplateView
+from typing import Any, cast
+
+from django.contrib.postgres import search as pg_search
 from django.db import models
-from django.db.models import Q
-from .models import Post, Tag, Category, About
-from django.http import JsonResponse
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchHeadline
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest, JsonResponse
 from django.urls import reverse
-from blog.context_processors import get_selected_language
+from django.views.generic import DetailView, ListView, TemplateView
+
+from blog.context_processors import LanguageCode, get_selected_language
+
+from .models import About, Category, Post, Tag
 
 
-SUPPORTED_POST_LANGUAGES = {'pt', 'en', 'es'}
+SearchQuery = pg_search.SearchQuery
+SearchHeadline = getattr(pg_search, "SearchHeadline", None)
 
 
-def get_post_language(request):
+SUPPORTED_POST_LANGUAGES: set[LanguageCode] = {'pt', 'en', 'es'}
+
+
+def get_post_language(request: HttpRequest) -> LanguageCode:
     return get_selected_language(request)
 
 
-def translate_ui_term(value, selected_language):
+def translate_ui_term(value: str | None, selected_language: LanguageCode) -> str | None:
     if not value or selected_language == 'pt':
         return value
 
@@ -40,11 +47,13 @@ class PostListView(ListView):
     context_object_name = 'posts'
     paginate_by = 4
 
-    def _selected_language(self):
+    def _selected_language(self) -> LanguageCode:
         return get_post_language(self.request)
     
-    def get_queryset(self):
-        queryset = Post.objects.filter(status=Post.Status.PUBLISHED).order_by('-created_at').select_related('category').prefetch_related('tags')
+    def get_queryset(self) -> QuerySet[Post]:
+        queryset: QuerySet[Post] = Post.objects.filter(
+            status=Post.Status.PUBLISHED
+        ).order_by('-created_at').select_related('category').prefetch_related('tags')
         selected_language = self._selected_language()
         
         # Search functionality
@@ -75,8 +84,8 @@ class PostListView(ListView):
         
         return queryset
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
         selected_language = self._selected_language()
         # Get all categories with their post count
         from django.db.models import Count
@@ -128,18 +137,19 @@ class PostDetailView(DetailView):
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
         selected_language = get_post_language(self.request)
-        self.object.ensure_language_translation(selected_language)
-        translated = self.object.get_translated_content(selected_language)
+        obj = cast(Post, self.get_object())
+        obj.ensure_language_translation(selected_language)
+        translated: dict[str, str] = obj.get_translated_content(selected_language)
 
         context['selected_language'] = selected_language
         context['display_title'] = translated['title']
         context['display_summary'] = translated['summary']
         context['display_body_html'] = translated['body_html']
         context['display_category_name'] = translate_ui_term(
-            self.object.category.name if self.object.category else 'Geral',
+            obj.category.name if obj.category else 'Geral',
             selected_language,
         )
         return context
@@ -148,8 +158,8 @@ class PostDetailView(DetailView):
 class AboutView(TemplateView):
     template_name = "blog/about.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
         selected_language = get_post_language(self.request)
         about = About.objects.first()
         context['about'] = about
@@ -162,15 +172,15 @@ class AboutView(TemplateView):
             context['display_about_body_html'] = translated['body_html']
         return context
 
-def search_posts_json(request):
-    query = request.GET.get('q', '')
+def search_posts_json(request: HttpRequest) -> JsonResponse:
+    query = str(request.GET.get('q', ''))
     selected_language = get_post_language(request)
     lang_suffix = f"?lang={selected_language}" if selected_language != 'pt' else ''
     if len(query) < 2:
         return JsonResponse({'results': []})
 
-    results = []
-    seen_ids = set()
+    results: list[dict[str, str]] = []
+    seen_ids: set[int] = set()
 
     # 1. Title and Summary matches (Simple & Fast)
     if selected_language == 'en':
@@ -197,10 +207,12 @@ def search_posts_json(request):
     )[:5]
     
     for post in simple_matches:
-        seen_ids.add(post.id)
-        translated = post.get_translated_content(selected_language)
-        title = translated['title']
-        summary = translated['summary']
+        if post.pk is not None:
+            seen_ids.add(int(post.pk))
+
+        translated: dict[str, str] = post.get_translated_content(selected_language)
+        title: str = translated['title']
+        summary: str = translated['summary']
         
         # Determine match type and snippet
         if query.lower() in title.lower():
@@ -210,7 +222,7 @@ def search_posts_json(request):
             match_type = match_summary_label
             # Simple highlight for summary
             import re
-            text = summary
+            text: str = summary
             # Case insensitive replace to add mark tags
             pattern = re.compile(re.escape(query), re.IGNORECASE)
             snippet = pattern.sub(lambda m: f'<mark>{m.group()}</mark>', text)
@@ -225,10 +237,11 @@ def search_posts_json(request):
         
     # 2. Body matches (using SearchHeadline for context)
     try:
+        if SearchHeadline is None:
+            raise RuntimeError("SearchHeadline indisponivel para este ambiente")
+
         search_query = SearchQuery(query, config='portuguese')
-        body_matches = Post.objects.filter(
-            status=Post.Status.PUBLISHED
-        ).exclude(
+        body_matches = Post.objects.filter(status=Post.Status.PUBLISHED).exclude(
             id__in=seen_ids
         ).annotate(
             headline=SearchHeadline(
@@ -241,16 +254,16 @@ def search_posts_json(request):
         ).filter(headline__icontains=query)[:5]
         
         for post in body_matches:
+            headline = str(getattr(post, 'headline', ''))
             results.append({
                 'title': post.title,
                 'url': f"{reverse('blog:post_detail', args=[post.slug])}{lang_suffix}",
-                'snippet': post.headline, 
+                'snippet': headline,
                 'date': post.created_at.strftime('%Y - %B'),
                 'type': content_label
             })
             
-    except Exception as e:
-        print(f"Search error: {e}")
+    except Exception:
         # Fallback: Simple contains search on body if Postgres search fails
         fallback_matches = Post.objects.filter(
             status=Post.Status.PUBLISHED,

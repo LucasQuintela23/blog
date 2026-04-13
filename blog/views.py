@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from django.db import models
 from django.db.models import Q
-from .models import Post, Tag, Category, Comment, About
+from .models import Post, Tag, Category, About
 from django.http import JsonResponse
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchHeadline
 from django.urls import reverse
@@ -74,19 +74,6 @@ class PostDetailView(DetailView):
     context_object_name = 'post'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect(f"{reverse('login')}?next={request.path}")
-            
-        self.object = self.get_object()
-        body = request.POST.get('body')
-        
-        if body:
-            author = request.user.get_full_name() or request.user.username
-            Comment.objects.create(post=self.object, author=author, body=body)
-            
-        return self.get(request, *args, **kwargs)
 
 
 class AboutView(TemplateView):

@@ -140,7 +140,7 @@
 <body>
     <div class="{% block container_class %}max-w-3xl{% endblock %} px-4">
         <header class="minimal-header pt-3 pb-4 mb-4 border-bottom position-relative">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
                 <!-- Mobile Menu Button -->
                 <button class="btn btn-link text-dark p-0 d-md-none border-0" type="button" id="mobileMenuBtn" aria-label="Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -153,19 +153,21 @@
                     <a href="https://www.linkedin.com/in/lucasquintela23/" target="_blank" rel="noopener noreferrer">Contato</a>
                 </nav>
 
-                <!-- Search Form -->
-                <form action="{% url 'blog:post_list' %}" method="get" class="position-relative">
-                    <div class="d-flex align-items-center rounded-pill px-3 py-1" style="background-color: var(--hover-bg);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search me-2" style="color: var(--secondary-color);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" name="q" id="searchInput" class="form-control form-control-sm border-0 bg-transparent shadow-none p-0" placeholder="Buscar..." value="{{ request.GET.q|default:'' }}" style="width: 150px; color: var(--primary-color);" autocomplete="off">
-                    </div>
-                    <div id="searchResults" class="search-dropdown"></div>
-                </form>
+                <div class="d-flex align-items-center ms-auto gap-2">
+                    <!-- Search Form -->
+                    <form action="{% url 'blog:post_list' %}" method="get" class="position-relative mb-0">
+                        <div class="d-flex align-items-center rounded-pill px-3 py-1" style="background-color: var(--hover-bg);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search me-2" style="color: var(--secondary-color);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" name="q" id="searchInput" class="form-control form-control-sm border-0 bg-transparent shadow-none p-0" placeholder="Buscar..." value="{{ request.GET.q|default:'' }}" style="width: 150px; color: var(--primary-color);" autocomplete="off">
+                        </div>
+                        <div id="searchResults" class="search-dropdown"></div>
+                    </form>
 
-                <!-- Theme Toggle -->
-                <button id="theme-toggle" class="btn btn-link p-0 ms-3 text-muted" aria-label="Toggle Dark Mode" style="color: var(--secondary-color) !important;">
-                    <i class="fas fa-moon"></i>
-                </button>
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="btn btn-link p-0 text-muted" aria-label="Toggle Dark Mode" style="color: var(--secondary-color) !important;">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Mobile Menu (Hidden by default) -->

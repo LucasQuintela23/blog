@@ -109,7 +109,7 @@ class AboutAdmin(admin.ModelAdmin):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ('title', 'author', 'category', 'status', 'created_at', 'cover_image')
+    list_display = ('title', 'category', 'status', 'created_at', 'cover_image')
     list_editable = ('status',)
     list_filter = ('status', 'created_at', 'category', 'tags')
     search_fields = ('title', 'summary', 'body_markdown', 'tags__name')
@@ -119,7 +119,7 @@ class PostAdmin(admin.ModelAdmin):
     actions = ('publish_selected', 'unpublish_selected')
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('title', 'slug', 'summary', 'author', 'category', 'tags', 'status')
+            'fields': ('title', 'slug', 'summary', 'category', 'tags', 'status')
         }),
         ('Conteúdo', {
             'fields': ('body_markdown',),

@@ -5,33 +5,46 @@
 {% block content %}
 <article class="animate-in fade-in">
     <a href="{% url 'blog:post_list' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}" class="mb-5 d-inline-flex align-items-center gap-2 text-decoration-none text-muted" style="font-size: 0.875rem; transition: color 0.2s;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         {{ ui_labels.back_to_list }}
     </a>
-    
-    <header class="mb-5 post-detail-header">
-        <div class="d-flex flex-wrap align-items-center gap-2 text-muted small mb-4 text-uppercase fw-bold" style="letter-spacing: 0.05em;">
-            <span class="text-secondary">{{ display_category_name|default:"General" }}</span>
-            
-            {% for tag in post.tags.all %}
-            <span class="mx-1">•</span>
-            <span class="text-secondary">{{ tag.name }}</span>
-            {% endfor %}
 
-            <span class="mx-1">•</span>
-            <span>{{ post.created_at|date:"d M Y" }}</span>
+    <div class="row g-5">
+        <aside class="col-lg-3 order-2 order-lg-1">
+            <div id="post-toc-wrapper" class="post-toc" style="display: none;">
+                <h2 class="post-toc__title">{{ ui_labels.on_this_page }}</h2>
+                <nav id="post-toc-nav" class="post-toc__nav" aria-label="Tabela de conteudo do post"></nav>
+                <button id="backToTopBtn" class="back-to-top-btn" type="button" aria-label="Voltar ao topo" title="Voltar ao topo">
+                    <span class="back-to-top-btn__label">Voltar ao topo</span>
+                    <span class="back-to-top-btn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M6 14L12 8L18 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="col-lg-9 order-1 order-lg-2">
+            <header class="mb-5 post-detail-header">
+                <div class="d-flex flex-wrap align-items-center gap-2 text-muted small mb-4 text-uppercase fw-bold" style="letter-spacing: 0.05em;">
+                    <span class="text-secondary">{{ display_category_name|default:"General" }}</span>
+                    <span class="mx-1">•</span>
+                    <span>{{ post.created_at|date:"d M Y" }}</span>
+                </div>
+                <h1 class="mb-4">{{ display_title|default:post.title }}</h1>
+            </header>
+
+            {% if post.cover_image %}
+            <figure class="mb-5">
+                <img src="{{ post.cover_image.url }}" class="img-fluid rounded w-100" alt="{{ post.title }}">
+            </figure>
+            {% endif %}
+
+            <div class="prose" id="post-content">
+                {{ display_body_html|default:post.body_html|safe }}
+            </div>
         </div>
-        <h1 class="mb-4">{{ display_title|default:post.title }}</h1>
-    </header>
-
-    {% if post.cover_image %}
-    <figure class="mb-5">
-        <img src="{{ post.cover_image.url }}" class="img-fluid rounded w-100" alt="{{ post.title }}">
-    </figure>
-    {% endif %}
-
-    <div class="prose">
-        {{ display_body_html|default:post.body_html|safe }}
     </div>
 </article>
 
@@ -86,6 +99,120 @@
             if (next && isStyleDirective(next.textContent)) {
                 next.remove();
             }
+        });
+    }
+
+    const contentRoot = document.getElementById('post-content');
+    const tocWrapper = document.getElementById('post-toc-wrapper');
+    const tocNav = document.getElementById('post-toc-nav');
+
+    if (contentRoot && tocWrapper && tocNav) {
+        const headings = Array.from(contentRoot.querySelectorAll('h1, h2, h3, h4'));
+        const usedIds = new Set();
+        const linkById = new Map();
+
+        const slugify = (value) => {
+            const base = (value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-');
+            return base || 'secao';
+        };
+
+        const createUniqueId = (text) => {
+            const base = slugify(text);
+            let candidate = base;
+            let index = 2;
+            while (usedIds.has(candidate) || document.getElementById(candidate)) {
+                candidate = `${base}-${index}`;
+                index += 1;
+            }
+            usedIds.add(candidate);
+            return candidate;
+        };
+
+        if (headings.length > 0) {
+            tocWrapper.style.display = 'block';
+            headings.forEach((heading) => {
+                if (!heading.id) {
+                    heading.id = createUniqueId(heading.textContent || 'secao');
+                } else {
+                    usedIds.add(heading.id);
+                }
+
+                const link = document.createElement('a');
+                link.href = `#${heading.id}`;
+                link.textContent = (heading.textContent || '').trim();
+                link.className = ['H3', 'H4'].includes(heading.tagName)
+                    ? 'post-toc__link post-toc__link--sub'
+                    : 'post-toc__link';
+                tocNav.appendChild(link);
+                linkById.set(heading.id, link);
+            });
+
+            const setActiveLink = (id) => {
+                linkById.forEach((link, currentId) => {
+                    link.classList.toggle('is-active', currentId === id);
+                });
+            };
+
+            const firstHeading = headings[0];
+            if (firstHeading) {
+                setActiveLink(firstHeading.id);
+            }
+
+            if ('IntersectionObserver' in window) {
+                const visibleIds = new Set();
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            const targetId = entry.target.id;
+                            if (!targetId) {
+                                return;
+                            }
+                            if (entry.isIntersecting) {
+                                visibleIds.add(targetId);
+                            } else {
+                                visibleIds.delete(targetId);
+                            }
+                        });
+
+                        const activeHeading = headings.find((heading) => visibleIds.has(heading.id));
+                        if (activeHeading) {
+                            setActiveLink(activeHeading.id);
+                        }
+                    },
+                    {
+                        root: null,
+                        rootMargin: '0px 0px -70% 0px',
+                        threshold: 0,
+                    }
+                );
+
+                headings.forEach((heading) => observer.observe(heading));
+            } else {
+                const onScroll = () => {
+                    const current = headings
+                        .filter((heading) => heading.getBoundingClientRect().top <= 120)
+                        .pop() || headings[0];
+                    if (current) {
+                        setActiveLink(current.id);
+                    }
+                };
+
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
+            }
+        }
+    }
+
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 </script>

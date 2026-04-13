@@ -30,26 +30,6 @@
                 </div>
                 {% endif %}
 
-                {% if all_tags %}
-                <div>
-                    <h3 class="text-uppercase fw-bold text-muted mb-4" style="font-size: 0.75rem; letter-spacing: 0.1em;">
-                        {{ ui_labels.tags }}
-                    </h3>
-            
-                    <nav class="sidebar-nav">
-                        {% for tag in all_tags %}
-                        <a href="?tag={{ tag.slug }}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}" class="tag-link d-flex justify-content-between align-items-center text-decoration-none py-2 px-1 text-dark">
-                            <span class="small fw-medium">
-                                {{ tag.display_name|default:tag.name }}
-                            </span>
-                            <span class="tag-count small text-muted fw-normal" style="font-size: 0.75rem;">
-                                {{ tag.post_count }}
-                            </span>
-                        </a>
-                        {% endfor %}
-                    </nav>
-                </div>
-                {% endif %}
             </aside>
         </div>
 
@@ -63,11 +43,6 @@
                     <a href="{{ post.get_absolute_url }}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}" class="text-decoration-none text-reset">
                         <div class="post-meta mb-2">
                             <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ post.category.display_name|default:"General" }}</span>
-                            
-                            {% for tag in post.tags.all %}
-                            <span class="mx-1 text-muted">•</span>
-                            <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ tag.display_name|default:tag.name }}</span>
-                            {% endfor %}
                             
                             <span class="mx-1 text-muted">•</span>
                             <span class="text-muted small">{{ post.created_at|date:"d M Y" }}</span>
@@ -95,7 +70,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
+                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
                             &larr; Anterior
                         </a>
                     </li>
@@ -103,7 +78,7 @@
                     
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
+                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
                             Próxima &rarr;
                         </a>
                     </li>

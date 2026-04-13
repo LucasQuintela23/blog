@@ -139,7 +139,7 @@
 
 <body>
     <div class="{% block container_class %}max-w-3xl{% endblock %} px-4">
-        <header class="minimal-header pt-3 pb-4 mb-4 border-bottom position-relative">
+        <header class="minimal-header pt-3 pb-4 mb-4 border-bottom">
             <div class="d-flex align-items-center gap-3">
                 <!-- Mobile Menu Button -->
                 <button class="btn btn-link text-dark p-0 d-md-none border-0" type="button" id="mobileMenuBtn" aria-label="Menu">
@@ -186,15 +186,29 @@
                 </nav>
             </div>
         </header>
+        <div id="header-spacer" aria-hidden="true"></div>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
                 const mobileMenu = document.getElementById('mobileMenu');
+                const header = document.querySelector('.minimal-header');
+                const headerSpacer = document.getElementById('header-spacer');
+
+                const syncHeaderSpacer = () => {
+                    if (!header || !headerSpacer) {
+                        return;
+                    }
+                    headerSpacer.style.height = `${header.offsetHeight}px`;
+                };
+
+                syncHeaderSpacer();
+                window.addEventListener('resize', syncHeaderSpacer);
                 
                 if (mobileMenuBtn && mobileMenu) {
                     mobileMenuBtn.addEventListener('click', function() {
                         mobileMenu.classList.toggle('d-none');
+                        syncHeaderSpacer();
                     });
                 }
             });

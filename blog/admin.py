@@ -1,8 +1,15 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django import forms
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Post, Tag, Category, About
+from .models import Post, Category, About
+
+
+try:
+    admin.site.unregister(Group)
+except admin.sites.NotRegistered:
+    pass
 
 
 class SplitMarkdownWidget(forms.Textarea):
@@ -64,9 +71,9 @@ class AboutAdminForm(forms.ModelForm):
         model = About
         fields = '__all__'
         widgets = {
-            'body_markdown': forms.Textarea(attrs={
+            'body_markdown': SplitMarkdownWidget(attrs={
                 'class': 'vLargeTextField',
-                'rows': '20',
+                'rows': '28',
                 'style': 'font-family: "Courier New", monospace; font-size: 12px;'
             }),
             'body_markdown_en': forms.Textarea(attrs={
@@ -86,55 +93,43 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
-    prepopulated_fields = {'slug': ('name',)}
-
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
     form = AboutAdminForm
     list_display = ('title', 'updated_at')
-    readonly_fields = ('html_preview', 'updated_at')
+    readonly_fields = ('updated_at',)
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('title',)
         }),
-        ('Conteúdo (Markdown)', {
+        ('Conteúdo', {
             'fields': ('body_markdown',),
-            'description': '<strong>Dicas:</strong> Use **negrito**, *itálico*, `código`, ```bloco de código```, # Títulos, - Listas, ou diagramas: <code>```mermaid<br/>graph TD<br/>A --> B<br/>```</code>'
-        }),
-        ('Previsualização', {
-            'fields': ('html_preview',),
-            'classes': ('wide',)
+            'description': 'Use os botoes para inserir markdown e acompanhe a previsualizacao em tempo real no mesmo painel.'
         }),
         ('Traduções (Opcional)', {
             'fields': ('title_en', 'body_markdown_en', 'title_es', 'body_markdown_es'),
             'classes': ('collapse',),
-            'description': 'Campos vazios serão preenchidos automaticamente pelo LibreTranslate quando disponível.'
+            'description': 'Preencha apenas quando quiser disponibilizar a pagina em ingles ou espanhol. Campos vazios usam fallback para portugues.'
+        }),
+        ('Metadados', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',)
         }),
     )
-    
-    def html_preview(self, obj):
-        from django.utils.html import mark_safe
-        return mark_safe(obj.body_html) if obj.body_html else ""
-    
-    html_preview.short_description = "Pré-visualização HTML (Salvo)"
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
     list_display = ('title', 'category', 'status', 'created_at', 'cover_image')
     list_editable = ('status',)
-    list_filter = ('status', 'created_at', 'category', 'tags')
-    search_fields = ('title', 'summary', 'body_markdown', 'tags__name')
+    list_filter = ('status', 'created_at', 'category')
+    search_fields = ('title', 'summary', 'body_markdown')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('created_at', 'updated_at')
-    filter_horizontal = ('tags',)
     actions = ('publish_selected', 'unpublish_selected', 'regenerate_translations')
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('title', 'slug', 'summary', 'category', 'tags', 'status')
+            'fields': ('title', 'slug', 'summary', 'category', 'status')
         }),
         ('Conteúdo', {
             'fields': ('body_markdown',),

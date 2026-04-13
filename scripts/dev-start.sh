@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-pip install Pillow
 python manage.py migrate --noinput
 
 python manage.py shell <<'PY'

@@ -9,7 +9,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 
 from blog.context_processors import LanguageCode, get_selected_language
 
-from .models import About, Category, Post, Tag
+from .models import About, Category, Post
 
 
 SearchQuery = pg_search.SearchQuery
@@ -27,17 +27,42 @@ def translate_ui_term(value: str | None, selected_language: LanguageCode) -> str
     if not value or selected_language == 'pt':
         return value
 
-    acronym_map = {
-        'QA': {
+    normalized_value = value.strip().lower()
+
+    term_map = {
+        'qa': {
             'en': 'Quality Assurance',
             'es': 'Aseguramiento de Calidad',
-        }
+        },
+        'geral': {
+            'en': 'General',
+            'es': 'General',
+        },
+        'garantia de qualidade': {
+            'en': 'Quality Assurance',
+            'es': 'Aseguramiento de Calidad',
+        },
+        'qualidade': {
+            'en': 'Quality',
+            'es': 'Calidad',
+        },
+        'engenharia de software': {
+            'en': 'Software Engineering',
+            'es': 'Ingeniería de Software',
+        },
+        'tecnologia': {
+            'en': 'Technology',
+            'es': 'Tecnología',
+        },
+        'dados': {
+            'en': 'Data',
+            'es': 'Datos',
+        },
     }
-    if value in acronym_map and selected_language in acronym_map[value]:
-        return acronym_map[value][selected_language]
 
-    if value.lower() == 'geral':
-        return 'General' if selected_language == 'en' else 'General'
+    translated = term_map.get(normalized_value, {}).get(selected_language)
+    if translated:
+        return translated
 
     return value
 
@@ -59,7 +84,7 @@ class PostListView(ListView):
         # Search functionality
         search_query = self.request.GET.get('q')
         if search_query:
-            # Search in Title, Summary and Tags (removed body for better relevance)
+            # Search in Title and Summary (removed body for better relevance)
             if selected_language == 'en':
                 language_filters = Q(title_en__icontains=search_query) | Q(summary_en__icontains=search_query)
             elif selected_language == 'es':
@@ -67,20 +92,12 @@ class PostListView(ListView):
             else:
                 language_filters = Q(title__icontains=search_query) | Q(summary__icontains=search_query)
 
-            queryset = queryset.filter(
-                language_filters |
-                Q(tags__name__icontains=search_query)
-            ).distinct()
+            queryset = queryset.filter(language_filters).distinct()
         
         # Filter by category if category slug is provided
         category_slug = self.request.GET.get('category')
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
-        
-        # Filter by tag if tag slug is provided
-        tag_slug = self.request.GET.get('tag')
-        if tag_slug:
-            queryset = queryset.filter(tags__slug=tag_slug)
         
         return queryset
     
@@ -93,11 +110,6 @@ class PostListView(ListView):
             post_count=Count('posts', filter=models.Q(posts__status=Post.Status.PUBLISHED))
         ).filter(post_count__gt=0).order_by('name')
         
-        # Get all tags with their post count
-        context['all_tags'] = Tag.objects.annotate(
-            post_count=Count('posts', filter=models.Q(posts__status=Post.Status.PUBLISHED))
-        ).filter(post_count__gt=0).order_by('-post_count')
-        
         # Add search query to context
         search_query = self.request.GET.get('q')
         if search_query:
@@ -108,16 +120,9 @@ class PostListView(ListView):
         if category_slug:
             context['current_category'] = Category.objects.filter(slug=category_slug).first()
         
-        # Add current tag to context if filtering
-        tag_slug = self.request.GET.get('tag')
-        if tag_slug:
-            context['current_tag'] = Tag.objects.filter(slug=tag_slug).first()
-
         context['selected_language'] = selected_language
         for category in context.get('all_categories', []):
             category.display_name = translate_ui_term(category.name, selected_language)
-        for tag in context.get('all_tags', []):
-            tag.display_name = translate_ui_term(tag.name, selected_language)
         for post in context.get('posts', []):
             post.ensure_language_translation(selected_language)
             translated = post.get_translated_content(selected_language)
@@ -125,8 +130,6 @@ class PostListView(ListView):
             post.display_summary = translated['summary']
             if post.category:
                 post.category.display_name = translate_ui_term(post.category.name, selected_language)
-            for tag in post.tags.all():
-                tag.display_name = translate_ui_term(tag.name, selected_language)
         
         return context
 

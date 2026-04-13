@@ -19,6 +19,7 @@ class LabelsDict(TypedDict):
     search_no_results: str
     back_to_list: str
     about_last_update: str
+    on_this_page: str
     footer_rights: str
 
 
@@ -44,6 +45,7 @@ UI_LABELS: dict[LanguageCode, LabelsDict] = {
         "search_no_results": "Nenhuma informação encontrada",
         "back_to_list": "Voltar à lista",
         "about_last_update": "Última atualização",
+        "on_this_page": "Nesta página",
         "footer_rights": "Todos os direitos reservados.",
     },
     "en": {
@@ -59,6 +61,7 @@ UI_LABELS: dict[LanguageCode, LabelsDict] = {
         "search_no_results": "No information found",
         "back_to_list": "Back to list",
         "about_last_update": "Last update",
+        "on_this_page": "On this page",
         "footer_rights": "All rights reserved.",
     },
     "es": {
@@ -74,6 +77,7 @@ UI_LABELS: dict[LanguageCode, LabelsDict] = {
         "search_no_results": "No se encontró información",
         "back_to_list": "Volver a la lista",
         "about_last_update": "Última actualización",
+        "on_this_page": "En esta página",
         "footer_rights": "Todos los derechos reservados.",
     },
 }

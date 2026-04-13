@@ -42,7 +42,8 @@ O projeto segue uma estrutura de **Modular Monolith**:
     docker compose up -d --build
     ```
 
-    Isso irá construir a imagem, instalar as dependências e iniciar os serviços `web` (Django) e `db` (Postgres).
+    Isso irá construir a imagem, instalar as dependências e iniciar os serviços `web` (Django), `db` (Postgres) e `libretranslate`.
+    O arquivo `.env` de desenvolvimento já existe no repositório e é usado automaticamente pelo Compose.
 
 3. **Acesse a aplicação:**
     * Frontend: [http://localhost:8000](http://localhost:8000)
@@ -50,11 +51,15 @@ O projeto segue uma estrutura de **Modular Monolith**:
 
 ### Configuração Inicial
 
-Como o banco de dados é inicializado do zero, você precisará criar um superusuário para acessar o admin:
+Na subida do container, as migrations são executadas automaticamente e um superusuário é criado ou atualizado com os valores definidos no `.env`:
 
 ```bash
-docker compose exec web python manage.py createsuperuser
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+DJANGO_SUPERUSER_PASSWORD=admin
 ```
+
+Se quiser alterar as credenciais, ajuste o `.env` e reinicie o serviço `web`.
 
 ## 🧪 Testes e Qualidade (QA)
 

@@ -201,10 +201,8 @@ JAZZMIN_SETTINGS = {
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
         "blog.Post": "fas fa-newspaper",
         "blog.Category": "fas fa-folder",
-        "blog.Tag": "fas fa-tag",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",

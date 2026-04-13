@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ about.title }} | TechBlog{% endblock %}
+{% block title %}{{ display_about_title|default:about.title }} | TechBlog{% endblock %}
 
 {% block content %}
-<h1 class="mb-4 text-center">{{ about.title }}</h1>
+<h1 class="mb-4 text-center">{{ display_about_title|default:about.title }}</h1>
 
 <div class="prose mx-auto">
-    {{ about.body_html|safe }}
+    {{ display_about_body_html|default:about.body_html|safe }}
 </div>
 
 <div class="mt-5 pt-4 border-top text-muted small">
-    Última atualização: {{ about.updated_at|date:"F d, Y" }}
+    {{ ui_labels.about_last_update }}: {{ about.updated_at|date:"F d, Y" }}
 </div>
 {% endblock %}

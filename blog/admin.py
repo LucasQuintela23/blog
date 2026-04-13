@@ -68,6 +68,16 @@ class AboutAdminForm(forms.ModelForm):
                 'class': 'vLargeTextField',
                 'rows': '20',
                 'style': 'font-family: "Courier New", monospace; font-size: 12px;'
+            }),
+            'body_markdown_en': forms.Textarea(attrs={
+                'class': 'vLargeTextField',
+                'rows': '14',
+                'style': 'font-family: "Courier New", monospace; font-size: 12px;'
+            }),
+            'body_markdown_es': forms.Textarea(attrs={
+                'class': 'vLargeTextField',
+                'rows': '14',
+                'style': 'font-family: "Courier New", monospace; font-size: 12px;'
             })
         }
 
@@ -98,6 +108,11 @@ class AboutAdmin(admin.ModelAdmin):
             'fields': ('html_preview',),
             'classes': ('wide',)
         }),
+        ('Traduções (Opcional)', {
+            'fields': ('title_en', 'body_markdown_en', 'title_es', 'body_markdown_es'),
+            'classes': ('collapse',),
+            'description': 'Campos vazios serão preenchidos automaticamente pelo LibreTranslate quando disponível.'
+        }),
     )
     
     def html_preview(self, obj):
@@ -116,7 +131,7 @@ class PostAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('created_at', 'updated_at')
     filter_horizontal = ('tags',)
-    actions = ('publish_selected', 'unpublish_selected')
+    actions = ('publish_selected', 'unpublish_selected', 'regenerate_translations')
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('title', 'slug', 'summary', 'category', 'tags', 'status')
@@ -124,6 +139,14 @@ class PostAdmin(admin.ModelAdmin):
         ('Conteúdo', {
             'fields': ('body_markdown',),
             'description': 'Use os botoes para inserir markdown e acompanhe a previsualizacao em tempo real no mesmo painel.'
+        }),
+        ('Traduções (Opcional)', {
+            'fields': (
+                'title_en', 'summary_en', 'body_markdown_en',
+                'title_es', 'summary_es', 'body_markdown_es'
+            ),
+            'classes': ('collapse',),
+            'description': 'Preencha apenas quando quiser disponibilizar o post em inglês ou espanhol. Campos vazios usam fallback para português.'
         }),
         ('Metadados', {
             'fields': ('created_at', 'updated_at'),
@@ -140,3 +163,11 @@ class PostAdmin(admin.ModelAdmin):
     def unpublish_selected(self, request, queryset):
         updated = queryset.update(status=Post.Status.DRAFT)
         self.message_user(request, f"{updated} postagem(ns) movida(s) para rascunho.")
+
+    @admin.action(description='Regerar traduções EN/ES selecionadas')
+    def regenerate_translations(self, request, queryset):
+        updated = 0
+        for post in queryset:
+            post.regenerate_auto_translations()
+            updated += 1
+        self.message_user(request, f"{updated} postagem(ns) com traduções EN/ES regeneradas.")

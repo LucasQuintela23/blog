@@ -101,6 +101,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "blog.context_processors.ui_labels",
             ],
         },
     },
@@ -232,3 +233,10 @@ JAZZMIN_UI_TWEAKS = {
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# LibreTranslate (auto translation for posts)
+LIBRETRANSLATE_ENABLED = os.getenv("LIBRETRANSLATE_ENABLED", "False") == "True"
+LIBRETRANSLATE_URL = os.getenv("LIBRETRANSLATE_URL", "")
+LIBRETRANSLATE_API_KEY = os.getenv("LIBRETRANSLATE_API_KEY", "")
+LIBRETRANSLATE_SOURCE_LANGUAGE = os.getenv("LIBRETRANSLATE_SOURCE_LANGUAGE", "pt")
+LIBRETRANSLATE_TIMEOUT = int(os.getenv("LIBRETRANSLATE_TIMEOUT", "15"))

@@ -12,14 +12,14 @@
                 {% if all_categories %}
                 <div class="mb-5">
                     <h3 class="text-uppercase fw-bold text-muted mb-4" style="font-size: 0.75rem; letter-spacing: 0.1em;">
-                        Categorias
+                        {{ ui_labels.categories }}
                     </h3>
             
                     <nav class="sidebar-nav">
                         {% for category in all_categories %}
-                        <a href="?category={{ category.slug }}" class="tag-link d-flex justify-content-between align-items-center text-decoration-none py-2 px-1 text-dark">
+                        <a href="?category={{ category.slug }}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}" class="tag-link d-flex justify-content-between align-items-center text-decoration-none py-2 px-1 text-dark">
                             <span class="small fw-medium">
-                                {{ category.name }}
+                                {{ category.display_name|default:category.name }}
                             </span>
                             <span class="tag-count small text-muted fw-normal" style="font-size: 0.75rem;">
                                 {{ category.post_count }}
@@ -33,14 +33,14 @@
                 {% if all_tags %}
                 <div>
                     <h3 class="text-uppercase fw-bold text-muted mb-4" style="font-size: 0.75rem; letter-spacing: 0.1em;">
-                        Palavras-Chave
+                        {{ ui_labels.tags }}
                     </h3>
             
                     <nav class="sidebar-nav">
                         {% for tag in all_tags %}
-                        <a href="?tag={{ tag.slug }}" class="tag-link d-flex justify-content-between align-items-center text-decoration-none py-2 px-1 text-dark">
+                        <a href="?tag={{ tag.slug }}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}" class="tag-link d-flex justify-content-between align-items-center text-decoration-none py-2 px-1 text-dark">
                             <span class="small fw-medium">
-                                {{ tag.name }}
+                                {{ tag.display_name|default:tag.name }}
                             </span>
                             <span class="tag-count small text-muted fw-normal" style="font-size: 0.75rem;">
                                 {{ tag.post_count }}
@@ -56,36 +56,36 @@
         <!-- Main Content (Right) -->
         <div class="col-lg-9 order-1 order-lg-2">
             <div class="mb-5 pb-4 border-bottom">
-                <h3 class="small fw-bold text-uppercase text-muted mb-4" style="letter-spacing: 0.1em;">Últimas Publicações</h3>
+                <h3 class="small fw-bold text-uppercase text-muted mb-4" style="letter-spacing: 0.1em;">{{ ui_labels.latest_posts }}</h3>
                 
                 {% for post in posts %}
                 <article class="post-card mb-5">
-                    <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-reset">
+                    <a href="{{ post.get_absolute_url }}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}" class="text-decoration-none text-reset">
                         <div class="post-meta mb-2">
-                            <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ post.category.name|default:"Geral" }}</span>
+                            <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ post.category.display_name|default:"General" }}</span>
                             
                             {% for tag in post.tags.all %}
                             <span class="mx-1 text-muted">•</span>
-                            <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ tag.name }}</span>
+                            <span class="text-uppercase small fw-bold text-secondary" style="font-size: 0.75rem;">{{ tag.display_name|default:tag.name }}</span>
                             {% endfor %}
                             
                             <span class="mx-1 text-muted">•</span>
                             <span class="text-muted small">{{ post.created_at|date:"d M Y" }}</span>
                         </div>
                         <h2 class="post-title h3 fw-bold mb-3">
-                            {{ post.title }}
+                            {{ post.display_title|default:post.title }}
                         </h2>
                         <p class="post-excerpt text-muted mb-3">
-                            {{ post.summary }}
+                            {{ post.display_summary|default:post.summary }}
                         </p>
                         <div class="read-more-link small fw-bold text-dark d-flex align-items-center">
-                            Ler artigo 
+                            {{ ui_labels.read_article }}
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right ms-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </div>
                     </a>
                 </article>
                 {% empty %}
-                <p class="text-muted">Nenhum post encontrado.</p>
+                <p class="text-muted">{{ ui_labels.no_posts }}</p>
                 {% endfor %}
             </div>
 
@@ -95,7 +95,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
                             &larr; Anterior
                         </a>
                     </li>
@@ -103,7 +103,7 @@
                     
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <a class="page-link border-0 text-dark" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if selected_language != 'pt' %}&lang={{ selected_language }}{% endif %}">
                             Próxima &rarr;
                         </a>
                     </li>

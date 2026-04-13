@@ -92,6 +92,26 @@ docker compose exec web mypy .
 * **CSRF/SQL Injection**: Proteções nativas do Django habilitadas.
 * **Container**: A aplicação roda como usuário não-root (`appuser`).
 
+## 🌐 Tradução Automática (LibreTranslate)
+
+O projeto suporta tradução automática de posts (PT -> EN/ES) ao salvar no admin.
+
+Configure no ambiente:
+
+```bash
+LIBRETRANSLATE_ENABLED=True
+LIBRETRANSLATE_URL=http://seu-libretranslate:5000/translate
+LIBRETRANSLATE_API_KEY=
+LIBRETRANSLATE_SOURCE_LANGUAGE=pt
+LIBRETRANSLATE_TIMEOUT=15
+```
+
+Comportamento:
+
+* A tradução é aplicada no `save` do post.
+* Só preenche campos EN/ES vazios (não sobrescreve traduções manuais).
+* Se a API falhar, o post continua sendo salvo normalmente.
+
 ## 📦 CI/CD
 
 O pipeline do GitHub Actions (`.github/workflows/ci-cd.yml`) executa:

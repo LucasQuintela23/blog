@@ -1,11 +1,17 @@
 import nh3
 import markdown
 import re
+import requests
+import logging
 from django.db import models
+from django.conf import settings
 from django.utils.html import strip_tags
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
+
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_unclosed_code_fences(markdown_text: str) -> str:
@@ -81,6 +87,49 @@ def _sanitize_html(html_content: str) -> str:
     )
 
 
+def _translate_with_libretranslate(text: str, target_language: str) -> str:
+    """Translate text using LibreTranslate and return original text on failures."""
+    if not text or not text.strip():
+        return text
+
+    if not getattr(settings, 'LIBRETRANSLATE_ENABLED', False):
+        return text
+
+    endpoint = getattr(settings, 'LIBRETRANSLATE_URL', '').strip()
+    if not endpoint:
+        return text
+
+    payload = {
+        'q': text,
+        'source': getattr(settings, 'LIBRETRANSLATE_SOURCE_LANGUAGE', 'pt'),
+        'target': target_language,
+        'format': 'text',
+    }
+    api_key = getattr(settings, 'LIBRETRANSLATE_API_KEY', '').strip()
+    if api_key:
+        payload['api_key'] = api_key
+
+    timeout = int(getattr(settings, 'LIBRETRANSLATE_TIMEOUT', 15))
+
+    try:
+        response = requests.post(endpoint, data=payload, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+        translated = data.get('translatedText')
+        return translated if translated else text
+    except Exception as exc:
+        logger.warning("LibreTranslate falhou para target=%s: %s", target_language, exc)
+        return text
+
+
+def _needs_translation(source_text: str, translated_text: str) -> bool:
+    source = (source_text or '').strip()
+    translated = (translated_text or '').strip()
+    if not source:
+        return False
+    return (not translated) or (translated == source)
+
+
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name=_("Nome"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
@@ -111,10 +160,18 @@ class Post(models.Model):
         PUBLISHED = 'PB', _('Publicado')
 
     title = models.CharField(max_length=255, verbose_name=_("Título"))
+    title_en = models.CharField(max_length=255, blank=True, default='', verbose_name=_("Título (Inglês)"))
+    title_es = models.CharField(max_length=255, blank=True, default='', verbose_name=_("Título (Espanhol)"))
     slug = models.SlugField(unique=True, db_index=True, verbose_name=_("Slug"))
     summary = models.TextField(verbose_name=_("Resumo"))
+    summary_en = models.TextField(blank=True, default='', verbose_name=_("Resumo (Inglês)"))
+    summary_es = models.TextField(blank=True, default='', verbose_name=_("Resumo (Espanhol)"))
     body_markdown = models.TextField(verbose_name=_("Conteúdo Markdown"))
+    body_markdown_en = models.TextField(blank=True, default='', verbose_name=_("Conteúdo Markdown (Inglês)"))
+    body_markdown_es = models.TextField(blank=True, default='', verbose_name=_("Conteúdo Markdown (Espanhol)"))
     body_html = models.TextField(editable=False, verbose_name=_("Conteúdo HTML"))
+    body_html_en = models.TextField(editable=False, blank=True, default='', verbose_name=_("Conteúdo HTML (Inglês)"))
+    body_html_es = models.TextField(editable=False, blank=True, default='', verbose_name=_("Conteúdo HTML (Espanhol)"))
     body_text = models.TextField(editable=False, verbose_name=_("Conteúdo Texto"), blank=True)
     status = models.CharField(
         max_length=2,
@@ -144,24 +201,59 @@ class Post(models.Model):
         return reverse('blog:post_detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
-        source_markdown = self.body_markdown or ""
-        self.body_markdown = source_markdown
-
-        if _looks_like_html(source_markdown):
-            html_content = source_markdown
-        else:
+        def render_markdown(markdown_source: str) -> str:
+            if _looks_like_html(markdown_source):
+                return markdown_source
             normalized_markdown = _normalize_mermaid_blocks(
-                _normalize_unclosed_code_fences(source_markdown)
+                _normalize_unclosed_code_fences(markdown_source)
             )
-            html_content = markdown.markdown(
+            return markdown.markdown(
                 normalized_markdown,
                 extensions=['extra', 'codehilite', 'toc']
             )
 
-        clean_html = _sanitize_html(html_content)
+        source_markdown = self.body_markdown or ""
+        self.body_markdown = source_markdown
+
+        # Auto-translate empty fields and stale fields that still mirror PT content.
+        if _needs_translation(self.title, self.title_en):
+            translated = _translate_with_libretranslate(self.title or '', 'en')
+            if translated and translated.strip() and translated.strip() != (self.title or '').strip():
+                self.title_en = translated
+        if _needs_translation(self.summary, self.summary_en):
+            translated = _translate_with_libretranslate(self.summary or '', 'en')
+            if translated and translated.strip() and translated.strip() != (self.summary or '').strip():
+                self.summary_en = translated
+        if _needs_translation(source_markdown, self.body_markdown_en):
+            translated = _translate_with_libretranslate(source_markdown, 'en')
+            if translated and translated.strip() and translated.strip() != source_markdown.strip():
+                self.body_markdown_en = translated
+
+        if _needs_translation(self.title, self.title_es):
+            translated = _translate_with_libretranslate(self.title or '', 'es')
+            if translated and translated.strip() and translated.strip() != (self.title or '').strip():
+                self.title_es = translated
+        if _needs_translation(self.summary, self.summary_es):
+            translated = _translate_with_libretranslate(self.summary or '', 'es')
+            if translated and translated.strip() and translated.strip() != (self.summary or '').strip():
+                self.summary_es = translated
+        if _needs_translation(source_markdown, self.body_markdown_es):
+            translated = _translate_with_libretranslate(source_markdown, 'es')
+            if translated and translated.strip() and translated.strip() != source_markdown.strip():
+                self.body_markdown_es = translated
+
+        clean_html = _sanitize_html(render_markdown(source_markdown))
         
         self.body_html = clean_html
         self.body_text = strip_tags(clean_html)
+
+        markdown_en = self.body_markdown_en or ""
+        self.body_markdown_en = markdown_en
+        self.body_html_en = _sanitize_html(render_markdown(markdown_en)) if markdown_en.strip() else ""
+
+        markdown_es = self.body_markdown_es or ""
+        self.body_markdown_es = markdown_es
+        self.body_html_es = _sanitize_html(render_markdown(markdown_es)) if markdown_es.strip() else ""
         
         super().save(*args, **kwargs)
         
@@ -172,14 +264,106 @@ class Post(models.Model):
                 search_vector=SearchVector('title', 'summary', 'body_markdown')
             )
 
+    def regenerate_auto_translations(self):
+        """Force EN/ES translations to be regenerated via LibreTranslate."""
+        self.title_en = ''
+        self.summary_en = ''
+        self.body_markdown_en = ''
+        self.body_html_en = ''
+
+        self.title_es = ''
+        self.summary_es = ''
+        self.body_markdown_es = ''
+        self.body_html_es = ''
+
+        self.save()
+
+    def ensure_language_translation(self, language_code: str):
+        """Ensure EN/ES translation exists for display; regenerate if still equal to PT."""
+        lang = (language_code or 'pt').lower()
+        if lang not in {'en', 'es'}:
+            return
+
+        source_title = self.title or ''
+        source_summary = self.summary or ''
+        source_body = self.body_markdown or ''
+
+        changed = False
+
+        if lang == 'en':
+            if _needs_translation(source_title, self.title_en):
+                translated = _translate_with_libretranslate(source_title, 'en')
+                if translated and translated.strip() != source_title.strip():
+                    self.title_en = translated
+                    changed = True
+            if _needs_translation(source_summary, self.summary_en):
+                translated = _translate_with_libretranslate(source_summary, 'en')
+                if translated and translated.strip() != source_summary.strip():
+                    self.summary_en = translated
+                    changed = True
+            if _needs_translation(source_body, self.body_markdown_en):
+                translated = _translate_with_libretranslate(source_body, 'en')
+                if translated and translated.strip() != source_body.strip():
+                    self.body_markdown_en = translated
+                    changed = True
+        else:
+            if _needs_translation(source_title, self.title_es):
+                translated = _translate_with_libretranslate(source_title, 'es')
+                if translated and translated.strip() != source_title.strip():
+                    self.title_es = translated
+                    changed = True
+            if _needs_translation(source_summary, self.summary_es):
+                translated = _translate_with_libretranslate(source_summary, 'es')
+                if translated and translated.strip() != source_summary.strip():
+                    self.summary_es = translated
+                    changed = True
+            if _needs_translation(source_body, self.body_markdown_es):
+                translated = _translate_with_libretranslate(source_body, 'es')
+                if translated and translated.strip() != source_body.strip():
+                    self.body_markdown_es = translated
+                    changed = True
+
+        if changed:
+            self.save()
+
     def __str__(self):
         return self.title
+
+    def get_translated_content(self, language_code: str) -> dict:
+        """Return post content for selected language with fallback to PT-BR."""
+        lang = (language_code or 'pt').lower()
+
+        if lang == 'en':
+            return {
+                'title': self.title_en or self.title,
+                'summary': self.summary_en or self.summary,
+                'body_html': self.body_html_en or self.body_html,
+            }
+
+        if lang == 'es':
+            return {
+                'title': self.title_es or self.title,
+                'summary': self.summary_es or self.summary,
+                'body_html': self.body_html_es or self.body_html,
+            }
+
+        return {
+            'title': self.title,
+            'summary': self.summary,
+            'body_html': self.body_html,
+        }
 
 
 class About(models.Model):
     title = models.CharField(max_length=255, default="Sobre Mim", verbose_name=_("Título"))
+    title_en = models.CharField(max_length=255, blank=True, default='', verbose_name=_("Título (Inglês)"))
+    title_es = models.CharField(max_length=255, blank=True, default='', verbose_name=_("Título (Espanhol)"))
     body_markdown = models.TextField(verbose_name=_("Conteúdo Markdown"))
+    body_markdown_en = models.TextField(blank=True, default='', verbose_name=_("Conteúdo Markdown (Inglês)"))
+    body_markdown_es = models.TextField(blank=True, default='', verbose_name=_("Conteúdo Markdown (Espanhol)"))
     body_html = models.TextField(editable=False, verbose_name=_("Conteúdo HTML"))
+    body_html_en = models.TextField(editable=False, blank=True, default='', verbose_name=_("Conteúdo HTML (Inglês)"))
+    body_html_es = models.TextField(editable=False, blank=True, default='', verbose_name=_("Conteúdo HTML (Espanhol)"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Atualizado em"))
 
     class Meta:
@@ -187,24 +371,102 @@ class About(models.Model):
         verbose_name_plural = _("Página Sobre")
 
     def save(self, *args, **kwargs):
-        source_markdown = self.body_markdown or ""
-        self.body_markdown = source_markdown
-
-        if _looks_like_html(source_markdown):
-            html_content = source_markdown
-        else:
+        def render_markdown(markdown_source: str) -> str:
+            if _looks_like_html(markdown_source):
+                return markdown_source
             normalized_markdown = _normalize_mermaid_blocks(
-                _normalize_unclosed_code_fences(source_markdown)
+                _normalize_unclosed_code_fences(markdown_source)
             )
-            html_content = markdown.markdown(
+            return markdown.markdown(
                 normalized_markdown,
                 extensions=['extra', 'codehilite', 'toc']
             )
 
-        clean_html = _sanitize_html(html_content)
+        source_markdown = self.body_markdown or ""
+        self.body_markdown = source_markdown
+
+        if _needs_translation(self.title, self.title_en):
+            translated = _translate_with_libretranslate(self.title or '', 'en')
+            if translated and translated.strip() and translated.strip() != (self.title or '').strip():
+                self.title_en = translated
+        if _needs_translation(self.title, self.title_es):
+            translated = _translate_with_libretranslate(self.title or '', 'es')
+            if translated and translated.strip() and translated.strip() != (self.title or '').strip():
+                self.title_es = translated
+
+        if _needs_translation(source_markdown, self.body_markdown_en):
+            translated = _translate_with_libretranslate(source_markdown, 'en')
+            if translated and translated.strip() and translated.strip() != source_markdown.strip():
+                self.body_markdown_en = translated
+        if _needs_translation(source_markdown, self.body_markdown_es):
+            translated = _translate_with_libretranslate(source_markdown, 'es')
+            if translated and translated.strip() and translated.strip() != source_markdown.strip():
+                self.body_markdown_es = translated
+
+        clean_html = _sanitize_html(render_markdown(source_markdown))
         
         self.body_html = clean_html
+        markdown_en = self.body_markdown_en or ""
+        self.body_markdown_en = markdown_en
+        self.body_html_en = _sanitize_html(render_markdown(markdown_en)) if markdown_en.strip() else ""
+
+        markdown_es = self.body_markdown_es or ""
+        self.body_markdown_es = markdown_es
+        self.body_html_es = _sanitize_html(render_markdown(markdown_es)) if markdown_es.strip() else ""
+
         super().save(*args, **kwargs)
+
+    def ensure_language_translation(self, language_code: str):
+        lang = (language_code or 'pt').lower()
+        if lang not in {'en', 'es'}:
+            return
+
+        changed = False
+        source_title = self.title or ''
+        source_body = self.body_markdown or ''
+
+        if lang == 'en':
+            if _needs_translation(source_title, self.title_en):
+                translated = _translate_with_libretranslate(source_title, 'en')
+                if translated and translated.strip() != source_title.strip():
+                    self.title_en = translated
+                    changed = True
+            if _needs_translation(source_body, self.body_markdown_en):
+                translated = _translate_with_libretranslate(source_body, 'en')
+                if translated and translated.strip() != source_body.strip():
+                    self.body_markdown_en = translated
+                    changed = True
+        else:
+            if _needs_translation(source_title, self.title_es):
+                translated = _translate_with_libretranslate(source_title, 'es')
+                if translated and translated.strip() != source_title.strip():
+                    self.title_es = translated
+                    changed = True
+            if _needs_translation(source_body, self.body_markdown_es):
+                translated = _translate_with_libretranslate(source_body, 'es')
+                if translated and translated.strip() != source_body.strip():
+                    self.body_markdown_es = translated
+                    changed = True
+
+        if changed:
+            self.save()
+
+    def get_translated_content(self, language_code: str) -> dict:
+        lang = (language_code or 'pt').lower()
+        if lang == 'en':
+            return {
+                'title': self.title_en or self.title,
+                'body_html': self.body_html_en or self.body_html,
+            }
+        if lang == 'es':
+            return {
+                'title': self.title_es or self.title,
+                'body_html': self.body_html_es or self.body_html,
+            }
+        return {
+            'title': self.title,
+            'body_html': self.body_html,
+        }
 
     def __str__(self):
         return self.title

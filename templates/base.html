@@ -148,17 +148,24 @@
 
                 <!-- Desktop Nav -->
                 <nav class="d-none d-md-flex gap-4 minimal-nav">
-                    <a href="{% url 'blog:post_list' %}">Artigos</a>
-                    <a href="{% url 'blog:about' %}">Sobre</a>
-                    <a href="https://www.linkedin.com/in/lucasquintela23/" target="_blank" rel="noopener noreferrer">Contato</a>
+                    <a href="{% url 'blog:post_list' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}">{{ ui_labels.nav_articles }}</a>
+                    <a href="{% url 'blog:about' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}">{{ ui_labels.nav_about }}</a>
+                    <a href="https://www.linkedin.com/in/lucasquintela23/" target="_blank" rel="noopener noreferrer">{{ ui_labels.nav_contact }}</a>
                 </nav>
 
                 <div class="d-flex align-items-center ms-auto gap-2">
+                    <select id="post-language-switcher" class="form-select form-select-sm border-0" style="width: 88px; background-color: var(--hover-bg); color: var(--primary-color);">
+                        <option value="pt">PT</option>
+                        <option value="en">EN</option>
+                        <option value="es">ES</option>
+                    </select>
+
                     <!-- Search Form -->
                     <form action="{% url 'blog:post_list' %}" method="get" class="position-relative mb-0">
+                        <input type="hidden" name="lang" id="searchLangInput" value="pt">
                         <div class="d-flex align-items-center rounded-pill px-3 py-1" style="background-color: var(--hover-bg);">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search me-2" style="color: var(--secondary-color);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            <input type="text" name="q" id="searchInput" class="form-control form-control-sm border-0 bg-transparent shadow-none p-0" placeholder="Buscar..." value="{{ request.GET.q|default:'' }}" style="width: 150px; color: var(--primary-color);" autocomplete="off">
+                            <input type="text" name="q" id="searchInput" class="form-control form-control-sm border-0 bg-transparent shadow-none p-0" placeholder="{{ ui_labels.search_placeholder }}" value="{{ request.GET.q|default:'' }}" style="width: 150px; color: var(--primary-color);" autocomplete="off">
                         </div>
                         <div id="searchResults" class="search-dropdown"></div>
                     </form>
@@ -173,9 +180,9 @@
             <!-- Mobile Menu (Hidden by default) -->
             <div class="d-md-none mt-3 d-none border-top pt-3" id="mobileMenu">
                 <nav class="d-flex flex-column gap-3 minimal-nav">
-                    <a href="{% url 'blog:post_list' %}">Artigos</a>
-                    <a href="{% url 'blog:about' %}">Sobre</a>
-                    <a href="https://www.linkedin.com/in/lucasquintela23/" target="_blank" rel="noopener noreferrer">Contato</a>
+                    <a href="{% url 'blog:post_list' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}">{{ ui_labels.nav_articles }}</a>
+                    <a href="{% url 'blog:about' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}">{{ ui_labels.nav_about }}</a>
+                    <a href="https://www.linkedin.com/in/lucasquintela23/" target="_blank" rel="noopener noreferrer">{{ ui_labels.nav_contact }}</a>
                 </nav>
             </div>
         </header>
@@ -229,7 +236,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const searchResults = document.getElementById('searchResults');
+            const languageSwitcher = document.getElementById('post-language-switcher');
+            const searchLangInput = document.getElementById('searchLangInput');
             let debounceTimer;
+
+            const url = new URL(window.location.href);
+            const currentLang = url.searchParams.get('lang') || 'pt';
+            if (languageSwitcher) {
+                languageSwitcher.value = ['pt', 'en', 'es'].includes(currentLang) ? currentLang : 'pt';
+                languageSwitcher.addEventListener('change', function(e) {
+                    const nextLang = e.target.value;
+                    const updatedUrl = new URL(window.location.href);
+                    if (nextLang === 'pt') {
+                        updatedUrl.searchParams.delete('lang');
+                    } else {
+                        updatedUrl.searchParams.set('lang', nextLang);
+                    }
+                    window.location.href = updatedUrl.toString();
+                });
+            }
+
+            if (searchLangInput) {
+                searchLangInput.value = ['pt', 'en', 'es'].includes(currentLang) ? currentLang : 'pt';
+            }
+
+            if (!searchInput || !searchResults) {
+                return;
+            }
 
             searchInput.addEventListener('input', function(e) {
                 clearTimeout(debounceTimer);
@@ -241,7 +274,8 @@
                 }
 
                 debounceTimer = setTimeout(() => {
-                    fetch(`{% url 'blog:search_posts_json' %}?q=${encodeURIComponent(query)}`)
+                    const selectedLang = languageSwitcher ? languageSwitcher.value : 'pt';
+                    fetch(`{% url 'blog:search_posts_json' %}?q=${encodeURIComponent(query)}&lang=${encodeURIComponent(selectedLang)}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Network response was not ok');
@@ -265,7 +299,7 @@
                             } else {
                                 searchResults.innerHTML = `
                                     <div class="search-result-item text-center text-muted py-3">
-                                        <small>Nenhuma informação encontrada</small>
+                                        <small>{{ ui_labels.search_no_results }}</small>
                                     </div>
                                 `;
                                 searchResults.style.display = 'block';

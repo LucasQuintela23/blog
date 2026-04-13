@@ -8,8 +8,15 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - LIBRETRANSLATE_ENABLED=${LIBRETRANSLATE_ENABLED:-True}
+      - LIBRETRANSLATE_URL=${LIBRETRANSLATE_URL:-http://libretranslate:5000/translate}
+      - LIBRETRANSLATE_API_KEY=${LIBRETRANSLATE_API_KEY:-}
+      - LIBRETRANSLATE_SOURCE_LANGUAGE=${LIBRETRANSLATE_SOURCE_LANGUAGE:-pt}
+      - LIBRETRANSLATE_TIMEOUT=${LIBRETRANSLATE_TIMEOUT:-15}
     depends_on:
       - db
+      - libretranslate
 
   db:
     image: postgres:15-alpine
@@ -21,6 +28,14 @@ services:
       - POSTGRES_PASSWORD=blog_password
     ports:
       - "5433:5432"
+
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    environment:
+      - LT_LOAD_ONLY=en,es,pt
+      - LT_UPDATE_MODELS=true
+    ports:
+      - "5000:5000"
 
 volumes:
   postgres_data:

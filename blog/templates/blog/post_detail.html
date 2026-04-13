@@ -4,14 +4,14 @@
 
 {% block content %}
 <article class="animate-in fade-in">
-    <a href="{% url 'blog:post_list' %}" class="mb-5 d-inline-flex align-items-center gap-2 text-decoration-none text-muted" style="font-size: 0.875rem; transition: color 0.2s;">
+    <a href="{% url 'blog:post_list' %}{% if selected_language != 'pt' %}?lang={{ selected_language }}{% endif %}" class="mb-5 d-inline-flex align-items-center gap-2 text-decoration-none text-muted" style="font-size: 0.875rem; transition: color 0.2s;">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> 
-        Voltar à lista
+        {{ ui_labels.back_to_list }}
     </a>
     
     <header class="mb-5 post-detail-header">
         <div class="d-flex flex-wrap align-items-center gap-2 text-muted small mb-4 text-uppercase fw-bold" style="letter-spacing: 0.05em;">
-            <span class="text-secondary">{{ post.category.name|default:"Geral" }}</span>
+            <span class="text-secondary">{{ display_category_name|default:"General" }}</span>
             
             {% for tag in post.tags.all %}
             <span class="mx-1">•</span>
@@ -21,7 +21,7 @@
             <span class="mx-1">•</span>
             <span>{{ post.created_at|date:"d M Y" }}</span>
         </div>
-        <h1 class="mb-4">{{ post.title }}</h1>
+        <h1 class="mb-4">{{ display_title|default:post.title }}</h1>
     </header>
 
     {% if post.cover_image %}
@@ -31,7 +31,7 @@
     {% endif %}
 
     <div class="prose">
-        {{ post.body_html|safe }}
+        {{ display_body_html|default:post.body_html|safe }}
     </div>
 </article>
 
